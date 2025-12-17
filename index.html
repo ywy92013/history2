@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歷史戰役多人版 - History Battle</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'fade-in-up': 'fadeInUp 0.5s ease-out',
+                        'bounce-in': 'bounceIn 0.8s cubic-bezier(0.8, 0, 1, 1)',
+                        'float-particle': 'float 3s linear infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        bounceIn: {
+                            '0%': { transform: 'scale(0.3)', opacity: '0' },
+                            '50%': { transform: 'scale(1.05)', opacity: '1' },
+                            '70%': { transform: 'scale(0.9)' },
+                            '100%': { transform: 'scale(1)' },
+                        },
+                        float: {
+                            '0%': { transform: 'translate(0, 0)', opacity: '0' },
+                            '20%': { opacity: '1' },
+                            '100%': { transform: 'translate(var(--tx), var(--ty))', opacity: '0' }
+                        },
+                        progress: {
+                            '0%': { width: '0%' },
+                            '100%': { width: '100%' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(251, 191, 36, 0.5);
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(251, 191, 36, 0.8);
+        }
+    </style>
+
+    <!-- Import Map for React, Lucide, and Firebase -->
+    <script type="importmap">
+    {
+        "imports": {
+            "react": "https://esm.sh/react@18.2.0",
+            "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+            "lucide-react": "https://esm.sh/lucide-react@0.263.1",
+            "firebase/app": "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js",
+            "firebase/auth": "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js",
+            "firebase/firestore": "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"
+        }
+    }
+    </script>
+
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-stone-900 text-stone-100 min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect, useMemo, useRef } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import { 
+            Trophy, BookOpen, AlertCircle, CheckCircle, XCircle, 
+            ChevronRight, RotateCcw, Heart, Shield, Star, 
+            Swords, Flag, Skull, Users, Globe, Flame, Crown, Medal, Zap, Volume2, Sparkles, ScrollText
+        } from 'lucide-react';
+        
+        import { initializeApp } from 'firebase/app';
+        import { 
+            getAuth, 
+            signInAnonymously, 
+            onAuthStateChanged,
+            signInWithCustomToken
+        } from 'firebase/auth';
+        import { 
+            getFirestore, 
+            collection, 
+            addDoc, 
+            onSnapshot, 
+            query, 
+            serverTimestamp 
+        } from 'firebase/firestore';
+
+        // ==========================================
+        // CONFIGURATION SECTION (請在此填寫設定)
+        // ==========================================
+        
+        // 1. Gemini API Key (用於生成 AI 戰報)
+        const apiKey = ""; // 請在此填入您的 API Key，例如: "AIzaSy..."
+
+        // 2. Firebase Configuration
+        // 如果您在本地運行，請將您的 Firebase Config 貼在這裡。
+        // 如果您在特定平台(如 Canvas)運行，這些變數通常會自動注入。
+        const defaultFirebaseConfig = {
+            apiKey: "YOUR_FIREBASE_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // 嘗試獲取環境變數，如果沒有則使用上面的預設值
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : defaultFirebaseConfig;
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'history-game-default';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : undefined;
+
+        // Initialize Firebase
+        let app, auth, db;
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+        } catch (e) {
+            console.error("Firebase Initialization Error:", e);
+        }
+
+        // --- Audio System (Web Audio API) ---
+        const playSynthSound = (type) => {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                
+                const ctx = new AudioContext();
+                const osc = ctx.createOscillator();
+                const gainNode = ctx.createGain();
+                
+                osc.connect(gainNode);
+                gainNode.connect(ctx.destination);
+                
+                const now = ctx.currentTime;
+
+                if (type === 'correct') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, now);
+                    osc.frequency.exponentialRampToValueAtTime(1000, now + 0.1);
+                    gainNode.gain.setValueAtTime(0.1, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+                    gainNode.gain.setValueAtTime(0.1, now);
+                    gainNode.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'levelUp') {
+                    const notes = [440, 554, 659, 880];
+                    notes.forEach((freq, i) => {
+                        const oscN = ctx.createOscillator();
+                        const gainN = ctx.createGain();
+                        oscN.connect(gainN);
+                        gainN.connect(ctx.destination);
+                        oscN.type = 'triangle';
+                        oscN.frequency.value = freq;
+                        const startTime = now + i * 0.1;
+                        gainN.gain.setValueAtTime(0, startTime);
+                        gainN.gain.linearRampToValueAtTime(0.1, startTime + 0.05);
+                        gainN.gain.exponentialRampToValueAtTime(0.001, startTime + 0.5);
+                        oscN.start(startTime);
+                        oscN.stop(startTime + 0.5);
+                    });
+                } else if (type === 'click') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(800, now);
+                    gainNode.gain.setValueAtTime(0.05, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                }
+            } catch (e) {
+                console.error("Audio play failed", e);
+            }
+        };
+
+        // --- Helper: Gemini API Caller with Backoff ---
+        const callGemini = async (prompt) => {
+            if (!apiKey) {
+                return "錯誤：未設定 API Key。請在程式碼中填入 Gemini API Key。";
+            }
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }]
+            };
+
+            const delays = [1000, 2000, 4000];
+            
+            for (let i = 0; i <= delays.length; i++) {
+                try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const data = await response.json();
+                return data.candidates?.[0]?.content?.parts?.[0]?.text || "通訊干擾，無法接收總部訊息。";
+                } catch (error) {
+                if (i === delays.length) return "通訊失敗：無法連接到歷史資料庫。";
+                await new Promise(resolve => setTimeout(resolve, delays[i]));
+                }
+            }
+        };
+
+        // --- Visual Components ---
+        const ParticleEffects = () => {
+            return (
+                <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border-[6px] border-amber-500 rounded-full opacity-0 animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite]" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] border-4 border-white rounded-full opacity-0 animate-[ping_2s_cubic-bezier(0,0,0.2,1)_0.5s_infinite]" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[conic-gradient(from_0deg,transparent_0deg,rgba(251,191,36,0.1)_20deg,transparent_40deg)] animate-[spin_4s_linear_infinite]"></div>
+                    {[...Array(20)].map((_, i) => (
+                        <div 
+                        key={i}
+                        className="absolute w-2 h-2 bg-yellow-300 rounded-full shadow-[0_0_10px_rgba(253,224,71,0.8)] animate-float-particle"
+                        style={{
+                            top: '50%',
+                            left: '50%',
+                            '--tx': `${Math.cos(i * 18 * (Math.PI / 180)) * 400}px`,
+                            '--ty': `${Math.sin(i * 18 * (Math.PI / 180)) * 400}px`,
+                            animationDelay: `${i * 0.05}s`,
+                            opacity: 0.8
+                        }}
+                        />
+                    ))}
+                    <div className="absolute inset-0 bg-amber-600/30 animate-pulse mix-blend-overlay" />
+                </div>
+            );
+        };
+
+        // --- Main Component ---
+        const HistoryGameApp = () => {
+            // User & Data State
+            const [user, setUser] = useState(null);
+            const [playerName, setPlayerName] = useState('');
+            const [leaderboard, setLeaderboard] = useState([]);
+            
+            // Game State
+            const [gameState, setGameState] = useState('entry');
+            const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+            const [score, setScore] = useState(0);
+            const [lives, setLives] = useState(5);
+            const [showFeedback, setShowFeedback] = useState(false);
+            const [selectedOption, setSelectedOption] = useState(null);
+            const [currentLevel, setCurrentLevel] = useState(1);
+
+            // AI State
+            const [aiContent, setAiContent] = useState('');
+            const [isAiLoading, setIsAiLoading] = useState(false);
+
+            // Constants
+            const QUESTIONS_PER_LEVEL = 6;
+
+            // --- Auth & Data Logic ---
+            useEffect(() => {
+                if (!auth) return;
+                const initAuth = async () => {
+                    try {
+                        if (initialAuthToken) {
+                            await signInWithCustomToken(auth, initialAuthToken);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                    } catch (e) {
+                        console.error("Auth Error:", e);
+                    }
+                };
+                initAuth();
+                const unsubscribe = onAuthStateChanged(auth, setUser);
+                return () => unsubscribe();
+            }, []);
+
+            useEffect(() => {
+                if (!user || !db) return;
+                try {
+                    const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard'));
+                    const unsubscribe = onSnapshot(q, (snapshot) => {
+                        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        const sortedData = data.sort((a, b) => {
+                            if (b.score !== a.score) return b.score - a.score;
+                            return (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0);
+                        });
+                        setLeaderboard(sortedData);
+                    }, (error) => {
+                        console.error("Firestore Snapshot Error:", error);
+                    });
+                    return () => unsubscribe();
+                } catch (e) {
+                    console.error("Leaderboard fetch error:", e);
+                }
+            }, [user]);
+
+            const saveScore = async (finalScore) => {
+                if (!user || !playerName || !db) return;
+                try {
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard'), {
+                        userId: user.uid,
+                        name: playerName,
+                        score: finalScore,
+                        timestamp: serverTimestamp()
+                    });
+                } catch (e) {
+                    console.error("Error saving score:", e);
+                }
+            };
+
+            // --- AI Feature Functions ---
+            const handleGenerateReport = async () => {
+                if (isAiLoading || aiContent) return;
+                setIsAiLoading(true);
+                playSynthSound('click');
+
+                const resultState = gameState === 'victory' ? '光榮勝利' : '任務失敗';
+                const prompt = `
+                你是一位嚴肅但公正的軍事指揮官。
+                士兵代號：${playerName}
+                任務結果：${resultState}
+                最終得分：${score}
+                到達關卡：${currentLevel} / 5
+                剩餘生命：${lives} / 5
+
+                請用繁體中文，寫一份簡短的「戰役評估報告」。
+                如果勝利，稱讚其戰略眼光與歷史知識，並給予一個軍銜晉升的建議（如：晉升為歷史少校）。
+                如果失敗，指出其在歷史洪流中的遺憾，並鼓勵重新入伍研讀戰史。
+                語氣要像軍事簡報，包含「士兵：${playerName}」、「評估：」等格式。限制在 100 字以內。
+                `;
+
+                const result = await callGemini(prompt);
+                setAiContent(result);
+                setIsAiLoading(false);
+            };
+
+            // --- Question Database ---
+            const questions = [
+                // --- Level 1: 一戰遠因與背景 ---
+                {
+                    id: 1,
+                    level: 1,
+                    category: "一戰遠因",
+                    question: "第一次世界大戰的遠因通常包括同盟制度、軍備競賽、經濟和殖民地衝突，以及甚麼?",
+                    options: [
+                        { text: "極端民族主義", isCorrect: true },
+                        { text: "共產主義", isCorrect: false },
+                        { text: "孤立主義", isCorrect: false },
+                        { text: "自由主義", isCorrect: false }
+                    ],
+                    explanation: "極端民族主義（尤其是巴爾幹半島的泛斯拉夫主義）加劇了列強之間的對立。"
+                },
+                {
+                    id: 2,
+                    level: 1,
+                    category: "殖民地衝突",
+                    question: "20世紀初，法國和德國為了爭奪北非哪個地方的控制權，曾兩次爆發危機？",
+                    options: [
+                        { text: "摩洛哥", isCorrect: true },
+                        { text: "埃及", isCorrect: false },
+                        { text: "埃塞俄比亞", isCorrect: false },
+                        { text: "南非", isCorrect: false }
+                    ],
+                    explanation: "摩洛哥危機 (Moroccan Crises) 加深了法德兩國的敵意，促使英國更堅定支持法國。"
+                },
+                {
+                    id: 3,
+                    level: 1,
+                    category: "同盟制度",
+                    question: "德國、奧匈帝國、意大利組成的同盟稱為：",
+                    options: [
+                        { text: "三國協約", isCorrect: false },
+                        { text: "三國同盟", isCorrect: true },
+                        { text: "三帝同盟", isCorrect: false },
+                        { text: "軸心國", isCorrect: false }
+                    ],
+                    explanation: "三國同盟 (Triple Alliance) 於1882年結成。"
+                },
+                {
+                    id: 4,
+                    level: 1,
+                    category: "同盟制度",
+                    question: "英國、法國、俄國組成的陣營稱為：",
+                    options: [
+                        { text: "三國協約", isCorrect: true },
+                        { text: "三國同盟", isCorrect: false },
+                        { text: "國際聯盟", isCorrect: false },
+                        { text: "北約", isCorrect: false }
+                    ],
+                    explanation: "三國協約 (Triple Entente) 是為了抗衡三國同盟而形成的。"
+                },
+                {
+                    id: 5,
+                    level: 1,
+                    category: "導火線",
+                    question: "第一次世界大戰的直接導火線是：",
+                    options: [
+                        { text: "德國入侵比利時", isCorrect: false },
+                        { text: "奧匈帝國大公斐迪南遇刺", isCorrect: true },
+                        { text: "法國與德國的殖民衝突", isCorrect: false },
+                        { text: "意大利退出同盟", isCorrect: false }
+                    ],
+                    explanation: "1914年6月28日的塞拉耶佛事件直接引發了戰爭。"
+                },
+                {
+                    id: 6,
+                    level: 1,
+                    category: "戰爭爆發",
+                    question: "塞拉耶佛事件後，奧匈帝國在德國支持下向哪個國家宣戰？",
+                    options: [
+                        { text: "德國", isCorrect: false },
+                        { text: "意大利", isCorrect: false },
+                        { text: "塞爾維亞", isCorrect: true },
+                        { text: "俄國", isCorrect: false }
+                    ],
+                    explanation: "奧匈帝國向塞爾維亞宣戰，啟動了同盟連鎖反應。"
+                },
+                // --- Level 2: 戰前危機 ---
+                {
+                    id: 7,
+                    level: 2,
+                    category: "摩洛哥危機",
+                    question: "1905年第一次摩洛哥危機（丹吉爾危機）中，哪位德國皇帝親自訪問丹吉爾以挑戰法國的影響力？",
+                    options: [
+                        { text: "威廉一世", isCorrect: false },
+                        { text: "威廉二世", isCorrect: true },
+                        { text: "俾斯麥", isCorrect: false },
+                        { text: "希特拉", isCorrect: false }
+                    ],
+                    explanation: "威廉二世的高調訪問引發了國際緊張，結果反而促使英法關係更緊密。"
+                },
+                {
+                    id: 8,
+                    level: 2,
+                    category: "軍備競賽",
+                    question: "20世紀初，英國與德國在海軍方面展開了激烈的軍備競賽，主要爭相建造哪種劃時代的新式戰艦？",
+                    options: [
+                        { text: "無畏艦 (Dreadnought)", isCorrect: true },
+                        { text: "航空母艦", isCorrect: false },
+                        { text: "核動力潛艇", isCorrect: false },
+                        { text: "鐵甲船", isCorrect: false }
+                    ],
+                    explanation: "無畏艦的出現讓之前的戰艦瞬間過時，更加劇了英德之間的猜忌。"
+                },
+                {
+                    id: 9, 
+                    level: 2,
+                    category: "巴爾幹危機",
+                    question: "1908年，奧匈帝國在俄國未準備好之時，單方面宣佈正式吞併哪個地區，激怒了塞爾維亞？",
+                    options: [
+                        { text: "波斯尼亞和黑塞哥維那", isCorrect: true },
+                        { text: "阿爾巴尼亞", isCorrect: false },
+                        { text: "馬其頓", isCorrect: false },
+                        { text: "克羅地亞", isCorrect: false }
+                    ],
+                    explanation: "波斯尼亞危機埋下了奧匈與塞爾維亞之間仇恨的種子，為一戰爆發埋下伏筆。"
+                },
+                {
+                    id: 10,
+                    level: 2,
+                    category: "民族主義",
+                    question: "戰前巴爾幹半島局勢緊張，被稱為「歐洲火藥庫」，主要源於哪兩種民族主義思想的對抗？",
+                    options: [
+                        { text: "泛斯拉夫主義 vs 泛日耳曼主義", isCorrect: true },
+                        { text: "資本主義 vs 共產主義", isCorrect: false },
+                        { text: "自由主義 vs 保守主義", isCorrect: false },
+                        { text: "殖民民主 vs 帝國專制", isCorrect: false }
+                    ],
+                    explanation: "俄國支持泛斯拉夫主義（塞爾維亞），而德國支持泛日耳曼主義（奧匈帝國）。"
+                },
+                {
+                    id: 11,
+                    level: 2,
+                    category: "局部戰爭",
+                    question: "1912年爆發的第一次巴爾幹戰爭中，巴爾幹同盟（塞、保、希、蒙）主要擊敗了哪個衰落的帝國？",
+                    options: [
+                        { text: "鄂圖曼帝國", isCorrect: true },
+                        { text: "奧匈帝國", isCorrect: false },
+                        { text: "俄羅斯帝國", isCorrect: false },
+                        { text: "大英帝國", isCorrect: false }
+                    ],
+                    explanation: "鄂圖曼帝國幾乎喪失了在歐洲的所有領土。"
+                },
+                {
+                    id: 12,
+                    level: 2,
+                    category: "同盟分裂",
+                    question: "1913年第二次巴爾幹戰爭爆發的主要原因是：",
+                    options: [
+                        { text: "戰勝國分贓不均", isCorrect: true },
+                        { text: "德國介入調停", isCorrect: false },
+                        { text: "宗教信仰衝突", isCorrect: false },
+                        { text: "美國發動代理人戰爭", isCorrect: false }
+                    ],
+                    explanation: "保加利亞不滿領土分配，攻擊盟友塞爾維亞和希臘，結果戰敗，轉而親近奧匈帝國。"
+                },
+                // --- Level 3: 轉捩點與終結 ---
+                {
+                    id: 13,
+                    level: 3,
+                    category: "關鍵年份",
+                    question: "1917年，因為德國實行「無限制潛艇戰」，導致哪個大國加入協約國？",
+                    options: [
+                        { text: "日本", isCorrect: false },
+                        { text: "美國", isCorrect: true },
+                        { text: "鄂圖曼帝國", isCorrect: false },
+                        { text: "西班牙", isCorrect: false }
+                    ],
+                    explanation: "美國參戰扭轉了協約國的劣勢。"
+                },
+                {
+                    id: 14,
+                    level: 3,
+                    category: "戰局變化",
+                    question: "1917年，俄國因為爆發什麼事件而退出第一次世界大戰？",
+                    options: [
+                        { text: "十月革命", isCorrect: true },
+                        { text: "經濟崩潰", isCorrect: false },
+                        { text: "皇室聯姻", isCorrect: false },
+                        { text: "被德國完全佔領", isCorrect: false }
+                    ],
+                    explanation: "列寧領導的布爾什維克掌權後退出戰爭。"
+                },
+                {
+                    id: 15,
+                    level: 3,
+                    category: "戰爭結束",
+                    question: "1918年11月，哪位德國皇帝退位，標誌著德意志帝國的崩潰？",
+                    options: [
+                        { text: "威廉一世", isCorrect: false },
+                        { text: "威廉二世", isCorrect: true },
+                        { text: "俾斯麥", isCorrect: false },
+                        { text: "希特拉", isCorrect: false }
+                    ],
+                    explanation: "威廉二世退位流亡荷蘭。"
+                },
+                {
+                    id: 16,
+                    level: 3,
+                    category: "停戰日",
+                    question: "第一次世界大戰正式簽署停戰協定的日期是：",
+                    options: [
+                        { text: "1918年11月11日", isCorrect: true },
+                        { text: "1919年6月28日", isCorrect: false },
+                        { text: "1914年7月28日", isCorrect: false },
+                        { text: "1945年9月2日", isCorrect: false }
+                    ],
+                    explanation: "雙方在法國康邊森林簽署停戰協定。"
+                },
+                {
+                    id: 17,
+                    level: 3,
+                    category: "關鍵轉捩點",
+                    question: "1917年，英國截獲了德國發給墨西哥的「齊默曼密電」，內容慫恿墨西哥做什麼，從而導致美國參戰？",
+                    options: [
+                        { text: "攻擊美國並收復失地", isCorrect: true },
+                        { text: "斷絕與美國的石油貿易", isCorrect: false },
+                        { text: "暗殺美國總統", isCorrect: false },
+                        { text: "加入國際聯盟", isCorrect: false }
+                    ],
+                    explanation: "這份密電的曝光激怒了美國民眾，成為美國放棄孤立主義參戰的關鍵導火線。"
+                },
+                {
+                    id: 18,
+                    level: 3,
+                    category: "帝國瓦解",
+                    question: "一戰結果導致了四大帝國的瓦解，包括德意志、奧匈、俄羅斯及：",
+                    options: [
+                        { text: "大英帝國", isCorrect: false },
+                        { text: "鄂圖曼帝國", isCorrect: true },
+                        { text: "法蘭西帝國", isCorrect: false },
+                        { text: "日本帝國", isCorrect: false }
+                    ],
+                    explanation: "鄂圖曼帝國戰後分裂，現代土耳其建立。"
+                },
+                // --- Level 4: 巴黎和會 ---
+                {
+                    id: 19,
+                    level: 4,
+                    category: "巴黎和會",
+                    question: "1919年巴黎和會的三巨頭包括美國總統威爾遜、法國總理克里孟梭及英國首相：",
+                    options: [
+                        { text: "邱吉爾", isCorrect: false },
+                        { text: "勞萊．喬治", isCorrect: true },
+                        { text: "張伯倫", isCorrect: false },
+                        { text: "艾德禮", isCorrect: false }
+                    ],
+                    explanation: "英國首相勞萊．喬治在會議中扮演了調解法美立場的角色。"
+                },
+                {
+                    id: 20,
+                    level: 4,
+                    category: "民族自決",
+                    question: "美國總統威爾遜提出的「十四點原則」中，哪一項原則促成了波蘭、捷克斯洛伐克等新國家的建立？",
+                    options: [
+                        { text: "民族自決", isCorrect: true },
+                        { text: "自由貿易", isCorrect: false },
+                        { text: "航行自由", isCorrect: false },
+                        { text: "裁減軍備", isCorrect: false }
+                    ],
+                    explanation: "民族自決原則主張各民族有權決定自己的政治歸屬，改變了歐洲版圖。"
+                },
+                {
+                    id: 21,
+                    level: 4,
+                    category: "領土割讓",
+                    question: "根據凡爾賽條約，德國必須歸還哪個地區給法國？",
+                    options: [
+                        { text: "阿爾薩斯-洛林", isCorrect: true },
+                        { text: "蘇台德區", isCorrect: false },
+                        { text: "萊茵蘭", isCorrect: false },
+                        { text: "西里西亞", isCorrect: false }
+                    ],
+                    explanation: "這解決了普法戰爭以來的法國領土訴求。"
+                },
+                {
+                    id: 22,
+                    level: 4,
+                    category: "政治限制",
+                    question: "凡爾賽條約明文禁止德國與哪個同文同種的國家合併（德奧合併）？",
+                    options: [
+                        { text: "奧地利", isCorrect: true },
+                        { text: "瑞士", isCorrect: false },
+                        { text: "匈牙利", isCorrect: false },
+                        { text: "波蘭", isCorrect: false }
+                    ],
+                    explanation: "協約國擔心德奧合併會再次創造一個強大的中歐霸權。"
+                },
+                {
+                    id: 23,
+                    level: 4,
+                    category: "國際聯盟",
+                    question: "美國總統威爾遜雖然極力倡導成立國際聯盟，但美國最終為何沒有加入？",
+                    options: [
+                        { text: "國會（參議院）否決，奉行孤立主義", isCorrect: true },
+                        { text: "被英國和法國排擠", isCorrect: false },
+                        { text: "經濟大蕭條爆發", isCorrect: false },
+                        { text: "威爾遜總統突然去世", isCorrect: false }
+                    ],
+                    explanation: "美國國會拒絕批准凡爾賽條約，傾向於不干涉歐洲事務的孤立主義，這使得國聯一成立就缺乏強有力的支持。"
+                },
+                {
+                    id: 24,
+                    level: 4,
+                    category: "條約影響",
+                    question: "法國總理克里孟梭堅持嚴懲德國的主要目的是：",
+                    options: [
+                        { text: "幫助德國重建", isCorrect: false },
+                        { text: "確保德國無法再發動戰爭", isCorrect: true },
+                        { text: "推廣民主制度", isCorrect: false },
+                        { text: "建立歐洲合眾國", isCorrect: false }
+                    ],
+                    explanation: "法國希望一勞永逸地消除德國的安全威脅。"
+                },
+                // --- Level 5: 經濟大衰退與二戰前夕 ---
+                {
+                    id: 25,
+                    level: 5,
+                    category: "經濟大衰退",
+                    question: "1929年10月，哪一事件標誌著經濟大衰退的開始？",
+                    options: [
+                        { text: "倫敦大火", isCorrect: false },
+                        { text: "紐約華爾街股災", isCorrect: true },
+                        { text: "柏林銀行倒閉", isCorrect: false },
+                        { text: "東京大地震", isCorrect: false }
+                    ],
+                    explanation: "華爾街股災引發了全球性的經濟危機。"
+                },
+                {
+                    id: 26,
+                    level: 5,
+                    category: "經濟崩潰",
+                    question: "大蕭條導致美國停止了對德國的貸款援助（道威斯計劃），直接導致德國：",
+                    options: [
+                        { text: "經濟崩潰，失業率飆升", isCorrect: true },
+                        { text: "農業大豐收", isCorrect: false },
+                        { text: "科技突飛猛進", isCorrect: false },
+                        { text: "和平主義盛行", isCorrect: false }
+                    ],
+                    explanation: "德國經濟高度依賴美國貸款來支付賠款，資金鏈斷裂導致社會動盪，有利納粹掌權。"
+                },
+                {
+                    id: 27,
+                    level: 5,
+                    category: "政治極端化",
+                    question: "經濟大衰退如何助長了納粹黨在德國的興起？",
+                    options: [
+                        { text: "人民生活富足，支持政府", isCorrect: false },
+                        { text: "失業與貧困使人民渴望強人政治", isCorrect: true },
+                        { text: "美國提供了大量援助", isCorrect: false },
+                        { text: "德國經濟未受影響", isCorrect: false }
+                    ],
+                    explanation: "希特勒承諾解決失業問題並撕毀凡爾賽條約，贏得了絕望民眾的支持。"
+                },
+                {
+                    id: 28,
+                    level: 5,
+                    category: "德國政局",
+                    question: "第一次世界大戰後，德國成立了第一個民主政體，但因無力解決經濟與政治危機而最終崩潰，這個政體稱為：",
+                    options: [
+                        { text: "威瑪共和 (Weimar Republic)", isCorrect: true },
+                        { text: "第三帝國", isCorrect: false },
+                        { text: "德意志邦聯", isCorrect: false },
+                        { text: "普魯士王國", isCorrect: false }
+                    ],
+                    explanation: "威瑪共和雖然有民主憲法，但一直背負著凡爾賽條約的陰影，最終被納粹取代。"
+                },
+                {
+                    id: 29,
+                    level: 5,
+                    category: "外交政策",
+                    question: "面對德意日的侵略擴張（如吞併奧地利、捷克），英法等國初期採取了甚麼外交政策，試圖透過讓步來換取和平？",
+                    options: [
+                        { text: "綏靖政策 (Appeasement)", isCorrect: true },
+                        { text: "圍堵政策", isCorrect: false },
+                        { text: "鐵血政策", isCorrect: false },
+                        { text: "馬歇爾計劃", isCorrect: false }
+                    ],
+                    explanation: "綏靖政策不僅沒能阻止戰爭，反而助長了軸心國的侵略野心。"
+                },
+                {
+                    id: 30,
+                    level: 5,
+                    category: "走向二戰",
+                    question: "凡爾賽條約的怨恨加上經濟大衰退的打擊，最終導致了哪種政治思潮在德意日氾濫？",
+                    options: [
+                        { text: "自由民主主義", isCorrect: false },
+                        { text: "極權主義", isCorrect: true },
+                        { text: "無政府主義", isCorrect: false },
+                        { text: "和平主義", isCorrect: false }
+      ],
+      explanation: "德意日三國最終結成軸心國，發動二戰。"
+                }
+            ];
+
+            // --- Handlers ---
+            const handleStartGame = () => {
+                if (!playerName.trim()) {
+                    alert("請輸入名字以參加排名");
+                    return;
+                }
+                playSynthSound('click');
+                setGameState('playing');
+                setCurrentQuestionIndex(0);
+                setScore(0);
+                setLives(5);
+                setCurrentLevel(1);
+                setShowFeedback(false);
+                setSelectedOption(null);
+                setAiContent('');
+            };
+
+            const handleOptionClick = (isCorrect, index) => {
+                if (showFeedback) return;
+                
+                setSelectedOption(index);
+                setShowFeedback(true);
+                setAiContent('');
+                
+                if (isCorrect) {
+                    playSynthSound('correct');
+                    setScore(s => s + 100 + (lives * 10)); 
+                } else {
+                    playSynthSound('wrong');
+                    const newLives = lives - 1;
+                    setLives(newLives);
+                    if (newLives <= 0) {
+                        setTimeout(() => {
+                            saveScore(score);
+                            setGameState('gameOver');
+                        }, 1000);
+                    }
+                }
+            };
+
+            const handleNextQuestion = () => {
+                if (lives <= 0) return;
+                playSynthSound('click');
+
+                const nextIndex = currentQuestionIndex + 1;
+                const nextLevel = Math.floor(nextIndex / QUESTIONS_PER_LEVEL) + 1;
+                
+                if (nextIndex < questions.length) {
+                    if (nextLevel > currentLevel) {
+                        playSynthSound('levelUp');
+                        setGameState('levelUp');
+                        setTimeout(() => {
+                            setCurrentLevel(nextLevel);
+                            setCurrentQuestionIndex(nextIndex);
+                            setShowFeedback(false);
+                            setSelectedOption(null);
+                            setAiContent('');
+                            setGameState('playing');
+                        }, 3000);
+                    } else {
+                        setCurrentQuestionIndex(nextIndex);
+                        setShowFeedback(false);
+                        setSelectedOption(null);
+                        setAiContent('');
+                    }
+                } else {
+                    playSynthSound('levelUp'); // Victory sound
+                    saveScore(score + 500); 
+                    setScore(s => s + 500);
+                    setGameState('victory');
+                }
+            };
+
+            const getLevelInfo = (lvl) => {
+                switch(lvl) {
+                    case 1: return { title: "第一章：火藥桶被點燃", icon: <Flame size={64} className="text-orange-500 animate-pulse"/>, color: "text-orange-500", desc: "歐洲列強的矛盾一觸即發" };
+                    case 2: return { title: "第二章：危機四伏", icon: <AlertCircle size={64} className="text-red-500 animate-pulse"/>, color: "text-red-500", desc: "從北非到巴爾幹，外交衝突不斷升級" };
+                    case 3: return { title: "第三章：帝國的崩潰", icon: <Crown size={64} className="text-purple-500 animate-pulse"/>, color: "text-purple-500", desc: "皇冠落地，版圖重劃" };
+                    case 4: return { title: "第四章：凡爾賽的審判", icon: <BookOpen size={64} className="text-blue-500"/>, color: "text-blue-500", desc: "和平條約還是休戰協定？" };
+                    case 5: return { title: "第五章：黑暗的大蕭條", icon: <Volume2 size={64} className="text-stone-500 animate-bounce"/>, color: "text-stone-500", desc: "經濟崩潰與獨裁者崛起" };
+                    default: return { title: "", icon: null };
+                }
+            };
+
+            // Screens
+            if (!auth && !db && !user) {
+               return (
+                  <div className="min-h-screen flex items-center justify-center p-4">
+                     <div className="bg-stone-800 p-8 rounded-lg border-2 border-red-500 text-center">
+                        <h2 className="text-2xl font-bold mb-4 text-red-500">設定錯誤</h2>
+                        <p>無法連線到資料庫。</p>
+                        <p className="text-sm mt-2 text-stone-400">請確認您已在程式碼中填入 Firebase Config。</p>
+                     </div>
+                  </div>
+               );
+            }
+
+            // 1. Entry / Login Screen
+            if (gameState === 'entry') {
+                return (
+                <div className="min-h-screen bg-stone-900 flex items-center justify-center p-4 font-sans text-stone-100">
+                    <div className="max-w-4xl w-full grid md:grid-cols-2 gap-8">
+                    <div className="bg-stone-800 rounded-xl shadow-2xl p-8 border-4 border-amber-600 flex flex-col justify-center relative overflow-hidden">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-amber-900/20 via-transparent to-transparent opacity-50"></div>
+                        <div className="text-center mb-8 relative z-10">
+                        <div className="inline-block bg-amber-600 p-4 rounded-full mb-4 shadow-[0_0_20px_rgba(217,119,6,0.6)] animate-pulse">
+                            <Swords size={48} className="text-white" />
+                        </div>
+                        <h1 className="text-4xl font-black text-amber-500 tracking-wider mb-2">歷史戰役</h1>
+                        <p className="text-stone-400">多人連線挑戰 (40人+)</p>
+                        </div>
+
+                        <div className="space-y-4 relative z-10">
+                        <div>
+                            <label className="block text-stone-400 text-sm font-bold mb-2">你的名字 / 代號</label>
+                            <input 
+                            type="text" 
+                            value={playerName}
+                            onChange={(e) => setPlayerName(e.target.value)}
+                            placeholder="輸入名字以開始..."
+                            className="w-full bg-stone-900 border-2 border-stone-700 rounded-lg p-3 text-white focus:border-amber-500 outline-none transition-colors"
+                            maxLength={12}
+                            />
+                        </div>
+                        <button 
+                            onClick={handleStartGame}
+                            disabled={!playerName.trim()}
+                            className="w-full bg-amber-600 hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg border-b-4 border-amber-800 flex items-center justify-center gap-2 group"
+                        >
+                            <Swords size={20} className="group-hover:rotate-12 transition-transform"/> 加入戰場
+                        </button>
+                        </div>
+                    </div>
+
+                    <div className="bg-stone-800/80 rounded-xl shadow-xl p-6 border border-stone-700 backdrop-blur-sm overflow-hidden flex flex-col h-[500px]">
+                        <div className="flex items-center gap-2 mb-4 pb-4 border-b border-stone-700">
+                            <Trophy className="text-yellow-500" />
+                            <h3 className="text-xl font-bold text-white">即時排行榜</h3>
+                            <span className="bg-green-600 text-xs px-2 py-0.5 rounded ml-auto flex items-center gap-1 shadow-[0_0_10px_rgba(22,163,74,0.5)]">
+                            <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span> LIVE
+                            </span>
+                        </div>
+                        
+                        <div className="overflow-y-auto pr-2 space-y-2 flex-grow custom-scrollbar">
+                            {leaderboard.length === 0 ? (
+                            <div className="text-center text-stone-500 py-10">暫無記錄，成為第一個傳奇吧！</div>
+                            ) : (
+                            leaderboard.map((entry, idx) => (
+                                <div key={idx} className={`flex items-center justify-between p-3 rounded bg-stone-700/50 border border-stone-700 transition-all hover:bg-stone-700 ${idx < 3 ? 'border-amber-500/30 bg-amber-900/10' : ''}`}>
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-6 h-6 flex items-center justify-center font-bold rounded ${
+                                    idx === 0 ? 'bg-yellow-500 text-black shadow-[0_0_10px_rgba(234,179,8,0.5)]' : 
+                                    idx === 1 ? 'bg-stone-400 text-black' : 
+                                    idx === 2 ? 'bg-amber-700 text-white' : 'text-stone-500'
+                                    }`}>
+                                    {idx + 1}
+                                    </div>
+                                    <span className="font-bold text-stone-200 truncate max-w-[120px]">{entry.name}</span>
+                                </div>
+                                <span className="font-mono text-amber-500 font-bold">{entry.score}</span>
+                                </div>
+                            ))
+                            )}
+                        </div>
+                    </div>
+                    </div>
+                </div>
+                );
+            }
+
+            // 2. Level Up Transition Screen (Cutscene)
+            if (gameState === 'levelUp') {
+                const nextLvl = currentLevel + 1;
+                const info = getLevelInfo(currentLevel + 1);
+                
+                return (
+                <div className="min-h-screen bg-stone-950 flex items-center justify-center p-4 relative overflow-hidden">
+                    <ParticleEffects />
+                    
+                    <div className="max-w-2xl w-full text-center relative z-10 animate-fade-in-up">
+                    <div className="flex justify-center mb-6">
+                        <div className="relative">
+                        <div className="absolute inset-0 bg-current opacity-20 blur-xl rounded-full scale-150 animate-pulse"></div>
+                        {info.icon}
+                        </div>
+                    </div>
+                    <h2 className={`text-6xl font-black mb-4 ${info.color} drop-shadow-[0_0_25px_rgba(0,0,0,1)] tracking-tight`}>
+                        {info.title.split("：")[0]}
+                    </h2>
+                    <h3 className="text-3xl text-white font-bold mb-8 border-t-2 border-b-2 border-stone-700 py-4 inline-block tracking-widest bg-stone-900/50 px-8 backdrop-blur-sm">
+                        {info.title.split("：")[1]}
+                    </h3>
+                    <p className="text-xl text-stone-300 italic max-w-lg mx-auto leading-relaxed drop-shadow-md">
+                        "{info.desc}"
+                    </p>
+                    <div className="mt-12 w-full bg-stone-800 h-2 rounded-full overflow-hidden border border-stone-700">
+                        <div className="h-full bg-white animate-[progress_3s_ease-in-out_forwards] w-0 shadow-[0_0_10px_white]"></div>
+                    </div>
+                    </div>
+                </div>
+                );
+            }
+
+            // 3. Game Over & Victory
+            if (gameState === 'gameOver' || gameState === 'victory') {
+                const isVictory = gameState === 'victory';
+                
+                return (
+                <div className="min-h-screen bg-stone-900 flex items-center justify-center p-4 font-sans">
+                    <div className={`max-w-md w-full bg-stone-800 rounded-xl border-4 ${isVictory ? 'border-yellow-500' : 'border-red-900'} p-8 text-center shadow-2xl animate-fade-in relative overflow-hidden`}>
+                    
+                    {isVictory && <div className="absolute inset-0 bg-[radial-gradient(circle,_var(--tw-gradient-stops))] from-yellow-500/10 to-transparent animate-pulse"></div>}
+
+                    {isVictory ? (
+                        <Trophy size={80} className="text-yellow-400 mx-auto mb-6 animate-bounce drop-shadow-[0_0_15px_rgba(250,204,21,0.6)]" />
+                    ) : (
+                        <Skull size={80} className="text-red-600 mx-auto mb-6 animate-pulse" />
+                    )}
+                    
+                    <h2 className={`text-4xl font-bold mb-2 ${isVictory ? 'text-white' : 'text-red-500'}`}>
+                        {isVictory ? '光榮勝利！' : '任務失敗'}
+                    </h2>
+                    <p className="text-stone-400 mb-8">
+                        {isVictory ? '你見證了歷史的興衰。' : '歷史的洪流是無情的...'}
+                    </p>
+
+                    <div className="bg-stone-900/80 p-6 rounded-lg mb-8 border border-stone-700 relative z-10">
+                        <div className="text-sm text-stone-500 mb-2 uppercase tracking-widest">最終得分</div>
+                        <div className={`text-6xl font-black ${isVictory ? 'text-amber-400' : 'text-stone-300'}`}>
+                        {score}
+                        </div>
+                        <div className="text-stone-500 text-sm mt-2 flex items-center justify-center gap-1">
+                        <Zap size={14} className={isVictory ? "text-amber-400" : "text-stone-600"}/> 
+                        已上傳至排行榜
+                        </div>
+                    </div>
+
+                    {/* AI Battle Report Section */}
+                    <div className="mb-6 relative z-10">
+                        {!aiContent ? (
+                        <button 
+                            onClick={handleGenerateReport}
+                            disabled={isAiLoading}
+                            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors border border-indigo-400/50 shadow-lg shadow-indigo-900/50"
+                        >
+                            {isAiLoading ? (
+                            <><span className="animate-spin">?</span> 分析戰況中...</>
+                            ) : (
+                            <><ScrollText size={18} /> 生成 AI 戰役評估報告</>
+                            )}
+                        </button>
+                        ) : (
+                        <div className="bg-stone-900/90 border border-indigo-500/50 rounded-lg p-4 text-left animate-fade-in">
+                            <div className="flex items-center gap-2 mb-2 text-indigo-400 border-b border-indigo-500/30 pb-2">
+                                <Sparkles size={16} />
+                                <span className="font-bold text-sm">指揮官評語</span>
+                            </div>
+                            <p className="text-stone-300 text-sm leading-relaxed whitespace-pre-wrap">{aiContent}</p>
+                        </div>
+                        )}
+                    </div>
+
+                    <div className="flex flex-col gap-3 relative z-10">
+                        <button 
+                        onClick={() => {
+                            setGameState('entry');
+                            setPlayerName(''); 
+                            setAiContent('');
+                        }}
+                        className="w-full bg-stone-700 hover:bg-stone-600 text-white font-bold py-3 px-6 rounded-lg transition-colors border-b-4 border-stone-900 active:border-b-0 active:translate-y-1"
+                        >
+                        返回大廳 (查看排名)
+                        </button>
+                    </div>
+                    </div>
+                </div>
+                );
+            }
+
+            // 4. Playing Screen
+            const currentQ = questions[currentQuestionIndex];
+            const levelInfo = getLevelInfo(currentLevel);
+
+            return (
+                <div className="min-h-screen bg-stone-900 flex flex-col items-center justify-center p-4 font-sans text-stone-100 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none">
+                    <div className="absolute top-10 left-10 transform -rotate-12"><Globe size={300} /></div>
+                    <div className="absolute bottom-10 right-10 transform rotate-12"><Flag size={300} /></div>
+                </div>
+
+                <div className="max-w-2xl w-full bg-stone-800 rounded-xl shadow-2xl overflow-hidden border border-stone-700 flex flex-col relative z-10 min-h-[600px] md:h-auto">
+                    
+                    {/* HUD */}
+                    <div className="bg-stone-950 p-4 border-b border-stone-700">
+                    <div className="flex justify-between items-center mb-3">
+                        <div className="flex items-center gap-2">
+                        <span className={`px-2 py-0.5 rounded text-xs font-bold bg-stone-800 border border-stone-600 text-stone-300`}>
+                            {playerName}
+                        </span>
+                        <div className="flex items-center gap-1 text-amber-500">
+                            <Crown size={16} />
+                            <span className="font-bold">LEVEL {currentLevel}</span>
+                        </div>
+                        </div>
+                        <div className="font-mono text-2xl font-black text-white tracking-tight">{score}</div>
+                    </div>
+                    
+                    <div className="flex justify-between items-end">
+                        <div className="flex gap-1">
+                        {Array(5).fill(0).map((_, i) => (
+                            <Heart 
+                            key={i} 
+                            className={`w-5 h-5 transition-colors duration-300 ${i < lives ? 'fill-red-600 text-red-600 drop-shadow-[0_0_5px_rgba(220,38,38,0.5)]' : 'fill-stone-800 text-stone-800'}`} 
+                            />
+                        ))}
+                        </div>
+                        <div className="text-xs text-stone-500 font-mono">
+                        進度: {currentQuestionIndex + 1} / {questions.length}
+                        </div>
+                    </div>
+                    
+                    <div className="w-full bg-stone-900 h-1.5 mt-3 rounded-full overflow-hidden">
+                        <div 
+                        className={`h-full transition-all duration-500 ease-out ${levelInfo.color.replace('text', 'bg')}`}
+                        style={{ width: `${((currentQuestionIndex % QUESTIONS_PER_LEVEL) / QUESTIONS_PER_LEVEL) * 100}%` }}
+                        ></div>
+                    </div>
+                    </div>
+
+                    <div className="bg-stone-800/50 py-2 px-4 text-center border-b border-stone-700/50 backdrop-blur-sm">
+                    <span className={`text-sm font-bold ${levelInfo.color}`}>{levelInfo.title}</span>
+                    </div>
+
+                    {/* Question Area */}
+                    <div className="p-6 md:p-10 flex-grow flex flex-col justify-center">
+                    <div className="mb-4">
+                        <span className="inline-block px-3 py-1 rounded text-xs font-bold bg-stone-700 text-stone-300 border border-stone-600">
+                        {currentQ.category}
+                        </span>
+                    </div>
+                    
+                    <h3 className="text-xl md:text-2xl font-bold text-white mb-8 leading-relaxed">
+                        {currentQ.question}
+                    </h3>
+
+                    <div className="grid gap-3 md:grid-cols-1">
+                        {currentQ.options.map((option, index) => {
+                        let buttonStyle = "bg-stone-700 hover:bg-stone-600 border-b-4 border-stone-900 text-stone-200";
+                        let icon = null;
+
+                        if (showFeedback) {
+                            if (option.isCorrect) {
+                            buttonStyle = "bg-emerald-700 border-b-4 border-emerald-900 text-white ring-2 ring-emerald-500 ring-offset-2 ring-offset-stone-800";
+                            icon = <CheckCircle size={20} className="animate-bounce" />;
+                            } else if (selectedOption === index) {
+                            buttonStyle = "bg-red-700 border-b-4 border-red-900 text-white opacity-50";
+                            icon = <XCircle size={20} />;
+                            } else {
+                            buttonStyle = "bg-stone-800 text-stone-600 border-transparent opacity-30";
+                            }
+                        }
+
+                        return (
+                            <button
+                            key={index}
+                            onClick={() => handleOptionClick(option.isCorrect, index)}
+                            disabled={showFeedback}
+                            className={`w-full p-4 rounded-xl text-left transition-all duration-150 flex justify-between items-center font-medium active:scale-[0.99] active:translate-y-[2px] ${buttonStyle}`}
+                            >
+                            <span className="text-lg">{option.text}</span>
+                            {icon}
+                            </button>
+                        );
+                        })}
+                    </div>
+                    </div>
+
+                    {/* Feedback Area */}
+                    <div className={`p-6 bg-stone-800 border-t border-stone-700 min-h-[140px] transition-all duration-300 ${showFeedback ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none'}`}>
+                    {showFeedback && (
+                        <div className="animate-fade-in space-y-4">
+                        <div className={`flex items-start gap-4 p-4 rounded-lg bg-stone-900/50 border border-stone-700 ${questions[currentQuestionIndex].options[selectedOption].isCorrect ? 'border-l-4 border-l-emerald-500' : 'border-l-4 border-l-red-500'}`}>
+                            {questions[currentQuestionIndex].options[selectedOption].isCorrect ? 
+                            <Medal size={28} className="flex-shrink-0 text-emerald-500" /> : 
+                            <AlertCircle size={28} className="flex-shrink-0 text-red-500" />
+                            }
+                            <div>
+                            <p className={`font-black text-xl mb-1 ${questions[currentQuestionIndex].options[selectedOption].isCorrect ? 'text-emerald-500' : 'text-red-500'}`}>
+                                {questions[currentQuestionIndex].options[selectedOption].isCorrect ? '戰術成功！' : '戰線崩潰！'}
+                            </p>
+                            <p className="text-stone-300 text-sm leading-relaxed">
+                                {currentQ.explanation}
+                            </p>
+                            </div>
+                        </div>
+
+                        <button 
+                            onClick={handleNextQuestion}
+                            className="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-4 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 border-b-4 border-amber-800 active:border-b-0 active:translate-y-1 shadow-lg group"
+                        >
+                            {lives <= 0 ? '撤退 (結束)' : (currentQuestionIndex + 1 === questions.length ? '領取勳章 (完成)' : '下一關卡')} 
+                            <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform"/>
+                        </button>
+                        </div>
+                    )}
+                    </div>
+                </div>
+                </div>
+            );
+        };
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<HistoryGameApp />);
+    </script>
+</body>
+</html>
