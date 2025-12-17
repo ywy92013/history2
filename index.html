@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>¾ú¥v¾Ô§Ğ¦h¤Hª© - History Battle</title>
+    <title>æ­·å²æˆ°å½¹å¤šäººç‰ˆ - History Battle</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -62,7 +61,6 @@
         }
     </style>
 
-    <!-- Import Map for React, Lucide, and Firebase -->
     <script type="importmap">
     {
         "imports": {
@@ -76,7 +74,6 @@
     }
     </script>
 
-    <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body class="bg-stone-900 text-stone-100 min-h-screen">
@@ -108,15 +105,14 @@
         } from 'firebase/firestore';
 
         // ==========================================
-        // CONFIGURATION SECTION (½Ğ¦b¦¹¶ñ¼g³]©w)
+        // CONFIGURATION SECTION (è«‹åœ¨æ­¤å¡«å¯«è¨­å®š)
         // ==========================================
         
-        // 1. Gemini API Key (¥Î©ó¥Í¦¨ AI ¾Ô³ø)
-        const apiKey = ""; // ½Ğ¦b¦¹¶ñ¤J±zªº API Key¡A¨Ò¦p: "AIzaSy..."
+        // 1. Gemini API Key (ç”¨æ–¼ç”Ÿæˆ AI æˆ°å ±)
+        const apiKey = ""; // âš ï¸ è«‹åœ¨æ­¤å¡«å…¥æ‚¨çš„ API Keyï¼Œä¾‹å¦‚: "AIzaSy..."
 
         // 2. Firebase Configuration
-        // ¦pªG±z¦b¥»¦a¹B¦æ¡A½Ğ±N±zªº Firebase Config ¶K¦b³o¸Ì¡C
-        // ¦pªG±z¦b¯S©w¥­¥x(¦p Canvas)¹B¦æ¡A³o¨ÇÅÜ¼Æ³q±`·|¦Û°Êª`¤J¡C
+        // âš ï¸ è«‹å°‡ä¸‹æ–¹çš„ "YOUR_..." æ›¿æ›ç‚ºæ‚¨è‡ªå·±çš„ Firebase è¨­å®š
         const defaultFirebaseConfig = {
             apiKey: "YOUR_FIREBASE_API_KEY",
             authDomain: "YOUR_PROJECT.firebaseapp.com",
@@ -126,7 +122,7 @@
             appId: "YOUR_APP_ID"
         };
 
-        // ¹Á¸ÕÀò¨úÀô¹ÒÅÜ¼Æ¡A¦pªG¨S¦³«h¨Ï¥Î¤W­±ªº¹w³]­È
+        // å˜—è©¦ç²å–ç’°å¢ƒè®Šæ•¸ï¼Œå¦‚æœæ²’æœ‰å‰‡ä½¿ç”¨ä¸Šé¢çš„é è¨­å€¼
         const firebaseConfig = typeof __firebase_config !== 'undefined' 
             ? JSON.parse(__firebase_config) 
             : defaultFirebaseConfig;
@@ -207,7 +203,7 @@
         // --- Helper: Gemini API Caller with Backoff ---
         const callGemini = async (prompt) => {
             if (!apiKey) {
-                return "¿ù»~¡G¥¼³]©w API Key¡C½Ğ¦bµ{¦¡½X¤¤¶ñ¤J Gemini API Key¡C";
+                return "éŒ¯èª¤ï¼šæœªè¨­å®š API Keyã€‚è«‹åœ¨ç¨‹å¼ç¢¼ä¸­å¡«å…¥ Gemini API Keyã€‚";
             }
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
             const payload = {
@@ -227,9 +223,9 @@
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 
                 const data = await response.json();
-                return data.candidates?.[0]?.content?.parts?.[0]?.text || "³q°T¤zÂZ¡AµLªk±µ¦¬Á`³¡°T®§¡C";
+                return data.candidates?.[0]?.content?.parts?.[0]?.text || "é€šè¨Šå¹²æ“¾ï¼Œç„¡æ³•æ¥æ”¶ç¸½éƒ¨è¨Šæ¯ã€‚";
                 } catch (error) {
-                if (i === delays.length) return "³q°T¥¢±Ñ¡GµLªk³s±µ¨ì¾ú¥v¸ê®Æ®w¡C";
+                if (i === delays.length) return "é€šè¨Šå¤±æ•—ï¼šç„¡æ³•é€£æ¥åˆ°æ­·å²è³‡æ–™åº«ã€‚";
                 await new Promise(resolve => setTimeout(resolve, delays[i]));
                 }
             }
@@ -343,19 +339,19 @@
                 setIsAiLoading(true);
                 playSynthSound('click');
 
-                const resultState = gameState === 'victory' ? '¥úºa³Ó§Q' : '¥ô°È¥¢±Ñ';
+                const resultState = gameState === 'victory' ? 'å…‰æ¦®å‹åˆ©' : 'ä»»å‹™å¤±æ•—';
                 const prompt = `
-                §A¬O¤@¦ìÄYµÂ¦ı¤½¥¿ªº­x¨Æ«ü´§©x¡C
-                ¤h§L¥N¸¹¡G${playerName}
-                ¥ô°Èµ²ªG¡G${resultState}
-                ³Ì²×±o¤À¡G${score}
-                ¨ì¹FÃö¥d¡G${currentLevel} / 5
-                ³Ñ¾l¥Í©R¡G${lives} / 5
+                ä½ æ˜¯ä¸€ä½åš´è‚…ä½†å…¬æ­£çš„è»äº‹æŒ‡æ®å®˜ã€‚
+                å£«å…µä»£è™Ÿï¼š${playerName}
+                ä»»å‹™çµæœï¼š${resultState}
+                æœ€çµ‚å¾—åˆ†ï¼š${score}
+                åˆ°é”é—œå¡ï¼š${currentLevel} / 5
+                å‰©é¤˜ç”Ÿå‘½ï¼š${lives} / 5
 
-                ½Ğ¥ÎÁcÅé¤¤¤å¡A¼g¤@¥÷Â²µuªº¡u¾Ô§Ğµû¦ô³ø§i¡v¡C
-                ¦pªG³Ó§Q¡AºÙÆg¨ä¾Ô²¤²´¥ú»P¾ú¥vª¾ÃÑ¡A¨Ãµ¹¤©¤@­Ó­x»Î®Ê¤Éªº«ØÄ³¡]¦p¡G®Ê¤É¬°¾ú¥v¤Ö®Õ¡^¡C
-                ¦pªG¥¢±Ñ¡A«ü¥X¨ä¦b¾ú¥v¬x¬y¤¤ªº¿ò¾Ñ¡A¨Ã¹ªÀy­«·s¤J¥î¬ãÅª¾Ô¥v¡C
-                »y®ğ­n¹³­x¨ÆÂ²³ø¡A¥]§t¡u¤h§L¡G${playerName}¡v¡B¡uµû¦ô¡G¡vµ¥®æ¦¡¡C­­¨î¦b 100 ¦r¥H¤º¡C
+                è«‹ç”¨ç¹é«”ä¸­æ–‡ï¼Œå¯«ä¸€ä»½ç°¡çŸ­çš„ã€Œæˆ°å½¹è©•ä¼°å ±å‘Šã€ã€‚
+                å¦‚æœå‹åˆ©ï¼Œç¨±è®šå…¶æˆ°ç•¥çœ¼å…‰èˆ‡æ­·å²çŸ¥è­˜ï¼Œä¸¦çµ¦äºˆä¸€å€‹è»éŠœæ™‰å‡çš„å»ºè­°ï¼ˆå¦‚ï¼šæ™‰å‡ç‚ºæ­·å²å°‘æ ¡ï¼‰ã€‚
+                å¦‚æœå¤±æ•—ï¼ŒæŒ‡å‡ºå…¶åœ¨æ­·å²æ´ªæµä¸­çš„éºæ†¾ï¼Œä¸¦é¼“å‹µé‡æ–°å…¥ä¼ç ”è®€æˆ°å²ã€‚
+                èªæ°£è¦åƒè»äº‹ç°¡å ±ï¼ŒåŒ…å«ã€Œå£«å…µï¼š${playerName}ã€ã€ã€Œè©•ä¼°ï¼šã€ç­‰æ ¼å¼ã€‚é™åˆ¶åœ¨ 100 å­—ä»¥å…§ã€‚
                 `;
 
                 const result = await callGemini(prompt);
@@ -365,407 +361,407 @@
 
             // --- Question Database ---
             const questions = [
-                // --- Level 1: ¤@¾Ô»·¦]»P­I´º ---
+                // --- Level 1: ä¸€æˆ°é å› èˆ‡èƒŒæ™¯ ---
                 {
                     id: 1,
                     level: 1,
-                    category: "¤@¾Ô»·¦]",
-                    question: "²Ä¤@¦¸¥@¬É¤j¾Ôªº»·¦]³q±`¥]¬A¦P·ù¨î«×¡B­x³ÆÄvÁÉ¡B¸gÀÙ©M´Ş¥Á¦a½Ä¬ğ¡A¥H¤Î¬Æ»ò?",
+                    category: "ä¸€æˆ°é å› ",
+                    question: "ç¬¬ä¸€æ¬¡ä¸–ç•Œå¤§æˆ°çš„é å› é€šå¸¸åŒ…æ‹¬åŒç›Ÿåˆ¶åº¦ã€è»å‚™ç«¶è³½ã€ç¶“æ¿Ÿå’Œæ®–æ°‘åœ°è¡çªï¼Œä»¥åŠç”šéº¼?",
                     options: [
-                        { text: "·¥ºİ¥Á±Ú¥D¸q", isCorrect: true },
-                        { text: "¦@²£¥D¸q", isCorrect: false },
-                        { text: "©t¥ß¥D¸q", isCorrect: false },
-                        { text: "¦Û¥Ñ¥D¸q", isCorrect: false }
+                        { text: "æ¥µç«¯æ°‘æ—ä¸»ç¾©", isCorrect: true },
+                        { text: "å…±ç”¢ä¸»ç¾©", isCorrect: false },
+                        { text: "å­¤ç«‹ä¸»ç¾©", isCorrect: false },
+                        { text: "è‡ªç”±ä¸»ç¾©", isCorrect: false }
                     ],
-                    explanation: "·¥ºİ¥Á±Ú¥D¸q¡]¤×¨ä¬O¤Úº¸·F¥b®qªºªx´µ©Ô¤Ò¥D¸q¡^¥[¼@¤F¦C±j¤§¶¡ªº¹ï¥ß¡C"
+                    explanation: "æ¥µç«¯æ°‘æ—ä¸»ç¾©ï¼ˆå°¤å…¶æ˜¯å·´çˆ¾å¹¹åŠå³¶çš„æ³›æ–¯æ‹‰å¤«ä¸»ç¾©ï¼‰åŠ åŠ‡äº†åˆ—å¼·ä¹‹é–“çš„å°ç«‹ã€‚"
                 },
                 {
                     id: 2,
                     level: 1,
-                    category: "´Ş¥Á¦a½Ä¬ğ",
-                    question: "20¥@¬öªì¡Aªk°ê©M¼w°ê¬°¤Fª§¹Ü¥_«D­ş­Ó¦a¤èªº±±¨îÅv¡A´¿¨â¦¸Ãzµo¦M¾÷¡H",
+                    category: "æ®–æ°‘åœ°è¡çª",
+                    question: "20ä¸–ç´€åˆï¼Œæ³•åœ‹å’Œå¾·åœ‹ç‚ºäº†çˆ­å¥ªåŒ—éå“ªå€‹åœ°æ–¹çš„æ§åˆ¶æ¬Šï¼Œæ›¾å…©æ¬¡çˆ†ç™¼å±æ©Ÿï¼Ÿ",
                     options: [
-                        { text: "¼¯¬¥­ô", isCorrect: true },
-                        { text: "®J¤Î", isCorrect: false },
-                        { text: "®J¶ë«X¤ñ¨È", isCorrect: false },
-                        { text: "«n«D", isCorrect: false }
+                        { text: "æ‘©æ´›å“¥", isCorrect: true },
+                        { text: "åŸƒåŠ", isCorrect: false },
+                        { text: "åŸƒå¡ä¿„æ¯”äº", isCorrect: false },
+                        { text: "å—é", isCorrect: false }
                     ],
-                    explanation: "¼¯¬¥­ô¦M¾÷ (Moroccan Crises) ¥[²`¤Fªk¼w¨â°êªº¼Ä·N¡A«P¨Ï­^°ê§ó°í©w¤ä«ùªk°ê¡C"
+                    explanation: "æ‘©æ´›å“¥å±æ©Ÿ (Moroccan Crises) åŠ æ·±äº†æ³•å¾·å…©åœ‹çš„æ•µæ„ï¼Œä¿ƒä½¿è‹±åœ‹æ›´å …å®šæ”¯æŒæ³•åœ‹ã€‚"
                 },
                 {
                     id: 3,
                     level: 1,
-                    category: "¦P·ù¨î«×",
-                    question: "¼w°ê¡B¶ø¦I«Ò°ê¡B·N¤j§Q²Õ¦¨ªº¦P·ùºÙ¬°¡G",
+                    category: "åŒç›Ÿåˆ¶åº¦",
+                    question: "å¾·åœ‹ã€å¥§åŒˆå¸åœ‹ã€æ„å¤§åˆ©çµ„æˆçš„åŒç›Ÿç¨±ç‚ºï¼š",
                     options: [
-                        { text: "¤T°ê¨ó¬ù", isCorrect: false },
-                        { text: "¤T°ê¦P·ù", isCorrect: true },
-                        { text: "¤T«Ò¦P·ù", isCorrect: false },
-                        { text: "¶b¤ß°ê", isCorrect: false }
+                        { text: "ä¸‰åœ‹å”ç´„", isCorrect: false },
+                        { text: "ä¸‰åœ‹åŒç›Ÿ", isCorrect: true },
+                        { text: "ä¸‰å¸åŒç›Ÿ", isCorrect: false },
+                        { text: "è»¸å¿ƒåœ‹", isCorrect: false }
                     ],
-                    explanation: "¤T°ê¦P·ù (Triple Alliance) ©ó1882¦~µ²¦¨¡C"
+                    explanation: "ä¸‰åœ‹åŒç›Ÿ (Triple Alliance) æ–¼1882å¹´çµæˆã€‚"
                 },
                 {
                     id: 4,
                     level: 1,
-                    category: "¦P·ù¨î«×",
-                    question: "­^°ê¡Bªk°ê¡B«X°ê²Õ¦¨ªº°}ÀçºÙ¬°¡G",
+                    category: "åŒç›Ÿåˆ¶åº¦",
+                    question: "è‹±åœ‹ã€æ³•åœ‹ã€ä¿„åœ‹çµ„æˆçš„é™£ç‡Ÿç¨±ç‚ºï¼š",
                     options: [
-                        { text: "¤T°ê¨ó¬ù", isCorrect: true },
-                        { text: "¤T°ê¦P·ù", isCorrect: false },
-                        { text: "°ê»ÚÁp·ù", isCorrect: false },
-                        { text: "¥_¬ù", isCorrect: false }
+                        { text: "ä¸‰åœ‹å”ç´„", isCorrect: true },
+                        { text: "ä¸‰åœ‹åŒç›Ÿ", isCorrect: false },
+                        { text: "åœ‹éš›è¯ç›Ÿ", isCorrect: false },
+                        { text: "åŒ—ç´„", isCorrect: false }
                     ],
-                    explanation: "¤T°ê¨ó¬ù (Triple Entente) ¬O¬°¤F§Ü¿Å¤T°ê¦P·ù¦Ó§Î¦¨ªº¡C"
+                    explanation: "ä¸‰åœ‹å”ç´„ (Triple Entente) æ˜¯ç‚ºäº†æŠ—è¡¡ä¸‰åœ‹åŒç›Ÿè€Œå½¢æˆçš„ã€‚"
                 },
                 {
                     id: 5,
                     level: 1,
-                    category: "¾É¤õ½u",
-                    question: "²Ä¤@¦¸¥@¬É¤j¾Ôªºª½±µ¾É¤õ½u¬O¡G",
+                    category: "å°ç«ç·š",
+                    question: "ç¬¬ä¸€æ¬¡ä¸–ç•Œå¤§æˆ°çš„ç›´æ¥å°ç«ç·šæ˜¯ï¼š",
                     options: [
-                        { text: "¼w°ê¤J«I¤ñ§Q®É", isCorrect: false },
-                        { text: "¶ø¦I«Ò°ê¤j¤½´´­}«n¹J¨ë", isCorrect: true },
-                        { text: "ªk°ê»P¼w°êªº´Ş¥Á½Ä¬ğ", isCorrect: false },
-                        { text: "·N¤j§Q°h¥X¦P·ù", isCorrect: false }
+                        { text: "å¾·åœ‹å…¥ä¾µæ¯”åˆ©æ™‚", isCorrect: false },
+                        { text: "å¥§åŒˆå¸åœ‹å¤§å…¬æ–è¿ªå—é‡åˆº", isCorrect: true },
+                        { text: "æ³•åœ‹èˆ‡å¾·åœ‹çš„æ®–æ°‘è¡çª", isCorrect: false },
+                        { text: "æ„å¤§åˆ©é€€å‡ºåŒç›Ÿ", isCorrect: false }
                     ],
-                    explanation: "1914¦~6¤ë28¤éªº¶ë©Ô­C¦ò¨Æ¥óª½±µ¤Şµo¤F¾Ôª§¡C"
+                    explanation: "1914å¹´6æœˆ28æ—¥çš„å¡æ‹‰è€¶ä½›äº‹ä»¶ç›´æ¥å¼•ç™¼äº†æˆ°çˆ­ã€‚"
                 },
                 {
                     id: 6,
                     level: 1,
-                    category: "¾Ôª§Ãzµo",
-                    question: "¶ë©Ô­C¦ò¨Æ¥ó«á¡A¶ø¦I«Ò°ê¦b¼w°ê¤ä«ù¤U¦V­ş­Ó°ê®a«Å¾Ô¡H",
+                    category: "æˆ°çˆ­çˆ†ç™¼",
+                    question: "å¡æ‹‰è€¶ä½›äº‹ä»¶å¾Œï¼Œå¥§åŒˆå¸åœ‹åœ¨å¾·åœ‹æ”¯æŒä¸‹å‘å“ªå€‹åœ‹å®¶å®£æˆ°ï¼Ÿ",
                     options: [
-                        { text: "¼w°ê", isCorrect: false },
-                        { text: "·N¤j§Q", isCorrect: false },
-                        { text: "¶ëº¸ºû¨È", isCorrect: true },
-                        { text: "«X°ê", isCorrect: false }
+                        { text: "å¾·åœ‹", isCorrect: false },
+                        { text: "æ„å¤§åˆ©", isCorrect: false },
+                        { text: "å¡çˆ¾ç¶­äº", isCorrect: true },
+                        { text: "ä¿„åœ‹", isCorrect: false }
                     ],
-                    explanation: "¶ø¦I«Ò°ê¦V¶ëº¸ºû¨È«Å¾Ô¡A±Ò°Ê¤F¦P·ù³sÂê¤ÏÀ³¡C"
+                    explanation: "å¥§åŒˆå¸åœ‹å‘å¡çˆ¾ç¶­äºå®£æˆ°ï¼Œå•Ÿå‹•äº†åŒç›Ÿé€£é–åæ‡‰ã€‚"
                 },
-                // --- Level 2: ¾Ô«e¦M¾÷ ---
+                // --- Level 2: æˆ°å‰å±æ©Ÿ ---
                 {
                     id: 7,
                     level: 2,
-                    category: "¼¯¬¥­ô¦M¾÷",
-                    question: "1905¦~²Ä¤@¦¸¼¯¬¥­ô¦M¾÷¡]¤¦¦Nº¸¦M¾÷¡^¤¤¡A­ş¦ì¼w°ê¬Ó«Ò¿Ë¦Û³X°İ¤¦¦Nº¸¥H¬D¾Ôªk°êªº¼vÅT¤O¡H",
+                    category: "æ‘©æ´›å“¥å±æ©Ÿ",
+                    question: "1905å¹´ç¬¬ä¸€æ¬¡æ‘©æ´›å“¥å±æ©Ÿï¼ˆä¸¹å‰çˆ¾å±æ©Ÿï¼‰ä¸­ï¼Œå“ªä½å¾·åœ‹çš‡å¸è¦ªè‡ªè¨ªå•ä¸¹å‰çˆ¾ä»¥æŒ‘æˆ°æ³•åœ‹çš„å½±éŸ¿åŠ›ï¼Ÿ",
                     options: [
-                        { text: "«Â·G¤@¥@", isCorrect: false },
-                        { text: "«Â·G¤G¥@", isCorrect: true },
-                        { text: "­Ú´µ³Á", isCorrect: false },
-                        { text: "§Æ¯S©Ô", isCorrect: false }
+                        { text: "å¨å»‰ä¸€ä¸–", isCorrect: false },
+                        { text: "å¨å»‰äºŒä¸–", isCorrect: true },
+                        { text: "ä¿¾æ–¯éº¥", isCorrect: false },
+                        { text: "å¸Œç‰¹æ‹‰", isCorrect: false }
                     ],
-                    explanation: "«Â·G¤G¥@ªº°ª½Õ³X°İ¤Şµo¤F°ê»Úºò±i¡Aµ²ªG¤Ï¦Ó«P¨Ï­^ªkÃö«Y§óºò±K¡C"
+                    explanation: "å¨å»‰äºŒä¸–çš„é«˜èª¿è¨ªå•å¼•ç™¼äº†åœ‹éš›ç·Šå¼µï¼Œçµæœåè€Œä¿ƒä½¿è‹±æ³•é—œä¿‚æ›´ç·Šå¯†ã€‚"
                 },
                 {
                     id: 8,
                     level: 2,
-                    category: "­x³ÆÄvÁÉ",
-                    question: "20¥@¬öªì¡A­^°ê»P¼w°ê¦b®ü­x¤è­±®i¶}¤F¿E¯Pªº­x³ÆÄvÁÉ¡A¥D­nª§¬Û«Ø³y­şºØ¹º®É¥Nªº·s¦¡¾ÔÄ¥¡H",
+                    category: "è»å‚™ç«¶è³½",
+                    question: "20ä¸–ç´€åˆï¼Œè‹±åœ‹èˆ‡å¾·åœ‹åœ¨æµ·è»æ–¹é¢å±•é–‹äº†æ¿€çƒˆçš„è»å‚™ç«¶è³½ï¼Œä¸»è¦çˆ­ç›¸å»ºé€ å“ªç¨®åŠƒæ™‚ä»£çš„æ–°å¼æˆ°è‰¦ï¼Ÿ",
                     options: [
-                        { text: "µL¬ÈÄ¥ (Dreadnought)", isCorrect: true },
-                        { text: "¯èªÅ¥ÀÄ¥", isCorrect: false },
-                        { text: "®Ö°Ê¤O¼ç¸¥", isCorrect: false },
-                        { text: "ÅK¥Ò²î", isCorrect: false }
+                        { text: "ç„¡ç•è‰¦ (Dreadnought)", isCorrect: true },
+                        { text: "èˆªç©ºæ¯è‰¦", isCorrect: false },
+                        { text: "æ ¸å‹•åŠ›æ½›è‰‡", isCorrect: false },
+                        { text: "éµç”²èˆ¹", isCorrect: false }
                     ],
-                    explanation: "µL¬ÈÄ¥ªº¥X²{Åı¤§«eªº¾ÔÄ¥Àş¶¡¹L®É¡A§ó¥[¼@¤F­^¼w¤§¶¡ªº²q§Ò¡C"
+                    explanation: "ç„¡ç•è‰¦çš„å‡ºç¾è®“ä¹‹å‰çš„æˆ°è‰¦ç¬é–“éæ™‚ï¼Œæ›´åŠ åŠ‡äº†è‹±å¾·ä¹‹é–“çš„çŒœå¿Œã€‚"
                 },
                 {
                     id: 9, 
                     level: 2,
-                    category: "¤Úº¸·F¦M¾÷",
-                    question: "1908¦~¡A¶ø¦I«Ò°ê¦b«X°ê¥¼·Ç³Æ¦n¤§®É¡A³æ¤è­±«Å§G¥¿¦¡§]¨Ö­ş­Ó¦a°Ï¡A¿E«ã¤F¶ëº¸ºû¨È¡H",
+                    category: "å·´çˆ¾å¹¹å±æ©Ÿ",
+                    question: "1908å¹´ï¼Œå¥§åŒˆå¸åœ‹åœ¨ä¿„åœ‹æœªæº–å‚™å¥½ä¹‹æ™‚ï¼Œå–®æ–¹é¢å®£ä½ˆæ­£å¼åä½µå“ªå€‹åœ°å€ï¼Œæ¿€æ€’äº†å¡çˆ¾ç¶­äºï¼Ÿ",
                     options: [
-                        { text: "ªi´µ¥§¨È©M¶Â¶ë­ôºû¨º", isCorrect: true },
-                        { text: "ªüº¸¤Ú¥§¨È", isCorrect: false },
-                        { text: "°¨¨ä¹y", isCorrect: false },
-                        { text: "§JÃ¹¦a¨È", isCorrect: false }
+                        { text: "æ³¢æ–¯å°¼äºå’Œé»‘å¡å“¥ç¶­é‚£", isCorrect: true },
+                        { text: "é˜¿çˆ¾å·´å°¼äº", isCorrect: false },
+                        { text: "é¦¬å…¶é “", isCorrect: false },
+                        { text: "å…‹ç¾…åœ°äº", isCorrect: false }
                     ],
-                    explanation: "ªi´µ¥§¨È¦M¾÷®I¤U¤F¶ø¦I»P¶ëº¸ºû¨È¤§¶¡¤³«ëªººØ¤l¡A¬°¤@¾ÔÃzµo®I¤U¥ñµ§¡C"
+                    explanation: "æ³¢æ–¯å°¼äºå±æ©ŸåŸ‹ä¸‹äº†å¥§åŒˆèˆ‡å¡çˆ¾ç¶­äºä¹‹é–“ä»‡æ¨çš„ç¨®å­ï¼Œç‚ºä¸€æˆ°çˆ†ç™¼åŸ‹ä¸‹ä¼ç­†ã€‚"
                 },
                 {
                     id: 10,
                     level: 2,
-                    category: "¥Á±Ú¥D¸q",
-                    question: "¾Ô«e¤Úº¸·F¥b®q§½¶Õºò±i¡A³QºÙ¬°¡u¼Ú¬w¤õÃÄ®w¡v¡A¥D­n·½©ó­ş¨âºØ¥Á±Ú¥D¸q«ä·Qªº¹ï§Ü¡H",
+                    category: "æ°‘æ—ä¸»ç¾©",
+                    question: "æˆ°å‰å·´çˆ¾å¹¹åŠå³¶å±€å‹¢ç·Šå¼µï¼Œè¢«ç¨±ç‚ºã€Œæ­æ´²ç«è—¥åº«ã€ï¼Œä¸»è¦æºæ–¼å“ªå…©ç¨®æ°‘æ—ä¸»ç¾©æ€æƒ³çš„å°æŠ—ï¼Ÿ",
                     options: [
-                        { text: "ªx´µ©Ô¤Ò¥D¸q vs ªx¤é¦Õ°Ò¥D¸q", isCorrect: true },
-                        { text: "¸ê¥»¥D¸q vs ¦@²£¥D¸q", isCorrect: false },
-                        { text: "¦Û¥Ñ¥D¸q vs «O¦u¥D¸q", isCorrect: false },
-                        { text: "´Ş¥Á¥Á¥D vs «Ò°ê±M¨î", isCorrect: false }
+                        { text: "æ³›æ–¯æ‹‰å¤«ä¸»ç¾© vs æ³›æ—¥è€³æ›¼ä¸»ç¾©", isCorrect: true },
+                        { text: "è³‡æœ¬ä¸»ç¾© vs å…±ç”¢ä¸»ç¾©", isCorrect: false },
+                        { text: "è‡ªç”±ä¸»ç¾© vs ä¿å®ˆä¸»ç¾©", isCorrect: false },
+                        { text: "æ®–æ°‘æ°‘ä¸» vs å¸åœ‹å°ˆåˆ¶", isCorrect: false }
                     ],
-                    explanation: "«X°ê¤ä«ùªx´µ©Ô¤Ò¥D¸q¡]¶ëº¸ºû¨È¡^¡A¦Ó¼w°ê¤ä«ùªx¤é¦Õ°Ò¥D¸q¡]¶ø¦I«Ò°ê¡^¡C"
+                    explanation: "ä¿„åœ‹æ”¯æŒæ³›æ–¯æ‹‰å¤«ä¸»ç¾©ï¼ˆå¡çˆ¾ç¶­äºï¼‰ï¼Œè€Œå¾·åœ‹æ”¯æŒæ³›æ—¥è€³æ›¼ä¸»ç¾©ï¼ˆå¥§åŒˆå¸åœ‹ï¼‰ã€‚"
                 },
                 {
                     id: 11,
                     level: 2,
-                    category: "§½³¡¾Ôª§",
-                    question: "1912¦~Ãzµoªº²Ä¤@¦¸¤Úº¸·F¾Ôª§¤¤¡A¤Úº¸·F¦P·ù¡]¶ë¡B«O¡B§Æ¡B»X¡^¥D­nÀ»±Ñ¤F­ş­Ó°I¸¨ªº«Ò°ê¡H",
+                    category: "å±€éƒ¨æˆ°çˆ­",
+                    question: "1912å¹´çˆ†ç™¼çš„ç¬¬ä¸€æ¬¡å·´çˆ¾å¹¹æˆ°çˆ­ä¸­ï¼Œå·´çˆ¾å¹¹åŒç›Ÿï¼ˆå¡ã€ä¿ã€å¸Œã€è’™ï¼‰ä¸»è¦æ“Šæ•—äº†å“ªå€‹è¡°è½çš„å¸åœ‹ï¼Ÿ",
                     options: [
-                        { text: "¶k¹Ï°Ò«Ò°ê", isCorrect: true },
-                        { text: "¶ø¦I«Ò°ê", isCorrect: false },
-                        { text: "«XÃ¹´µ«Ò°ê", isCorrect: false },
-                        { text: "¤j­^«Ò°ê", isCorrect: false }
+                        { text: "é„‚åœ–æ›¼å¸åœ‹", isCorrect: true },
+                        { text: "å¥§åŒˆå¸åœ‹", isCorrect: false },
+                        { text: "ä¿„ç¾…æ–¯å¸åœ‹", isCorrect: false },
+                        { text: "å¤§è‹±å¸åœ‹", isCorrect: false }
                     ],
-                    explanation: "¶k¹Ï°Ò«Ò°ê´X¥G³à¥¢¤F¦b¼Ú¬wªº©Ò¦³»â¤g¡C"
+                    explanation: "é„‚åœ–æ›¼å¸åœ‹å¹¾ä¹å–ªå¤±äº†åœ¨æ­æ´²çš„æ‰€æœ‰é ˜åœŸã€‚"
                 },
                 {
                     id: 12,
                     level: 2,
-                    category: "¦P·ù¤Àµõ",
-                    question: "1913¦~²Ä¤G¦¸¤Úº¸·F¾Ôª§Ãzµoªº¥D­n­ì¦]¬O¡G",
+                    category: "åŒç›Ÿåˆ†è£‚",
+                    question: "1913å¹´ç¬¬äºŒæ¬¡å·´çˆ¾å¹¹æˆ°çˆ­çˆ†ç™¼çš„ä¸»è¦åŸå› æ˜¯ï¼š",
                     options: [
-                        { text: "¾Ô³Ó°ê¤ÀÅB¤£§¡", isCorrect: true },
-                        { text: "¼w°ê¤¶¤J½Õ°±", isCorrect: false },
-                        { text: "©v±Ğ«H¥õ½Ä¬ğ", isCorrect: false },
-                        { text: "¬ü°êµo°Ê¥N²z¤H¾Ôª§", isCorrect: false }
+                        { text: "æˆ°å‹åœ‹åˆ†è´“ä¸å‡", isCorrect: true },
+                        { text: "å¾·åœ‹ä»‹å…¥èª¿åœ", isCorrect: false },
+                        { text: "å®—æ•™ä¿¡ä»°è¡çª", isCorrect: false },
+                        { text: "ç¾åœ‹ç™¼å‹•ä»£ç†äººæˆ°çˆ­", isCorrect: false }
                     ],
-                    explanation: "«O¥[§Q¨È¤£º¡»â¤g¤À°t¡A§ğÀ»·ù¤Í¶ëº¸ºû¨È©M§ÆÃ¾¡Aµ²ªG¾Ô±Ñ¡AÂà¦Ó¿Ëªñ¶ø¦I«Ò°ê¡C"
+                    explanation: "ä¿åŠ åˆ©äºä¸æ»¿é ˜åœŸåˆ†é…ï¼Œæ”»æ“Šç›Ÿå‹å¡çˆ¾ç¶­äºå’Œå¸Œè‡˜ï¼Œçµæœæˆ°æ•—ï¼Œè½‰è€Œè¦ªè¿‘å¥§åŒˆå¸åœ‹ã€‚"
                 },
-                // --- Level 3: Âà±ÊÂI»P²×µ² ---
+                // --- Level 3: è½‰æ©é»èˆ‡çµ‚çµ ---
                 {
                     id: 13,
                     level: 3,
-                    category: "ÃöÁä¦~¥÷",
-                    question: "1917¦~¡A¦]¬°¼w°ê¹ê¦æ¡uµL­­¨î¼ç¸¥¾Ô¡v¡A¾É­P­ş­Ó¤j°ê¥[¤J¨ó¬ù°ê¡H",
+                    category: "é—œéµå¹´ä»½",
+                    question: "1917å¹´ï¼Œå› ç‚ºå¾·åœ‹å¯¦è¡Œã€Œç„¡é™åˆ¶æ½›è‰‡æˆ°ã€ï¼Œå°è‡´å“ªå€‹å¤§åœ‹åŠ å…¥å”ç´„åœ‹ï¼Ÿ",
                     options: [
-                        { text: "¤é¥»", isCorrect: false },
-                        { text: "¬ü°ê", isCorrect: true },
-                        { text: "¶k¹Ï°Ò«Ò°ê", isCorrect: false },
-                        { text: "¦è¯Z¤ú", isCorrect: false }
+                        { text: "æ—¥æœ¬", isCorrect: false },
+                        { text: "ç¾åœ‹", isCorrect: true },
+                        { text: "é„‚åœ–æ›¼å¸åœ‹", isCorrect: false },
+                        { text: "è¥¿ç­ç‰™", isCorrect: false }
                     ],
-                    explanation: "¬ü°ê°Ñ¾Ô§áÂà¤F¨ó¬ù°êªº¦H¶Õ¡C"
+                    explanation: "ç¾åœ‹åƒæˆ°æ‰­è½‰äº†å”ç´„åœ‹çš„åŠ£å‹¢ã€‚"
                 },
                 {
                     id: 14,
                     level: 3,
-                    category: "¾Ô§½ÅÜ¤Æ",
-                    question: "1917¦~¡A«X°ê¦]¬°Ãzµo¤°»ò¨Æ¥ó¦Ó°h¥X²Ä¤@¦¸¥@¬É¤j¾Ô¡H",
+                    category: "æˆ°å±€è®ŠåŒ–",
+                    question: "1917å¹´ï¼Œä¿„åœ‹å› ç‚ºçˆ†ç™¼ä»€éº¼äº‹ä»¶è€Œé€€å‡ºç¬¬ä¸€æ¬¡ä¸–ç•Œå¤§æˆ°ï¼Ÿ",
                     options: [
-                        { text: "¤Q¤ë­²©R", isCorrect: true },
-                        { text: "¸gÀÙ±Y¼ì", isCorrect: false },
-                        { text: "¬Ó«ÇÁp«Ã", isCorrect: false },
-                        { text: "³Q¼w°ê§¹¥ş¦û»â", isCorrect: false }
+                        { text: "åæœˆé©å‘½", isCorrect: true },
+                        { text: "ç¶“æ¿Ÿå´©æ½°", isCorrect: false },
+                        { text: "çš‡å®¤è¯å§»", isCorrect: false },
+                        { text: "è¢«å¾·åœ‹å®Œå…¨ä½”é ˜", isCorrect: false }
                     ],
-                    explanation: "¦C¹ç»â¾Éªº¥¬º¸¤°ºû§J´xÅv«á°h¥X¾Ôª§¡C"
+                    explanation: "åˆ—å¯§é ˜å°çš„å¸ƒçˆ¾ä»€ç¶­å…‹æŒæ¬Šå¾Œé€€å‡ºæˆ°çˆ­ã€‚"
                 },
                 {
                     id: 15,
                     level: 3,
-                    category: "¾Ôª§µ²§ô",
-                    question: "1918¦~11¤ë¡A­ş¦ì¼w°ê¬Ó«Ò°h¦ì¡A¼Ğ»xµÛ¼w·N§Ó«Ò°êªº±Y¼ì¡H",
+                    category: "æˆ°çˆ­çµæŸ",
+                    question: "1918å¹´11æœˆï¼Œå“ªä½å¾·åœ‹çš‡å¸é€€ä½ï¼Œæ¨™èªŒè‘—å¾·æ„å¿—å¸åœ‹çš„å´©æ½°ï¼Ÿ",
                     options: [
-                        { text: "«Â·G¤@¥@", isCorrect: false },
-                        { text: "«Â·G¤G¥@", isCorrect: true },
-                        { text: "­Ú´µ³Á", isCorrect: false },
-                        { text: "§Æ¯S©Ô", isCorrect: false }
+                        { text: "å¨å»‰ä¸€ä¸–", isCorrect: false },
+                        { text: "å¨å»‰äºŒä¸–", isCorrect: true },
+                        { text: "ä¿¾æ–¯éº¥", isCorrect: false },
+                        { text: "å¸Œç‰¹æ‹‰", isCorrect: false }
                     ],
-                    explanation: "«Â·G¤G¥@°h¦ì¬y¤`²üÄõ¡C"
+                    explanation: "å¨å»‰äºŒä¸–é€€ä½æµäº¡è·è˜­ã€‚"
                 },
                 {
                     id: 16,
                     level: 3,
-                    category: "°±¾Ô¤é",
-                    question: "²Ä¤@¦¸¥@¬É¤j¾Ô¥¿¦¡Ã±¸p°±¾Ô¨ó©wªº¤é´Á¬O¡G",
+                    category: "åœæˆ°æ—¥",
+                    question: "ç¬¬ä¸€æ¬¡ä¸–ç•Œå¤§æˆ°æ­£å¼ç°½ç½²åœæˆ°å”å®šçš„æ—¥æœŸæ˜¯ï¼š",
                     options: [
-                        { text: "1918¦~11¤ë11¤é", isCorrect: true },
-                        { text: "1919¦~6¤ë28¤é", isCorrect: false },
-                        { text: "1914¦~7¤ë28¤é", isCorrect: false },
-                        { text: "1945¦~9¤ë2¤é", isCorrect: false }
+                        { text: "1918å¹´11æœˆ11æ—¥", isCorrect: true },
+                        { text: "1919å¹´6æœˆ28æ—¥", isCorrect: false },
+                        { text: "1914å¹´7æœˆ28æ—¥", isCorrect: false },
+                        { text: "1945å¹´9æœˆ2æ—¥", isCorrect: false }
                     ],
-                    explanation: "Âù¤è¦bªk°ê±dÃä´ËªLÃ±¸p°±¾Ô¨ó©w¡C"
+                    explanation: "é›™æ–¹åœ¨æ³•åœ‹åº·é‚Šæ£®æ—ç°½ç½²åœæˆ°å”å®šã€‚"
                 },
                 {
                     id: 17,
                     level: 3,
-                    category: "ÃöÁäÂà±ÊÂI",
-                    question: "1917¦~¡A­^°êºIÀò¤F¼w°êµoµ¹¾¥¦è­ôªº¡u»ôÀq°Ò±K¹q¡v¡A¤º®e¼£±v¾¥¦è­ô°µ¤°»ò¡A±q¦Ó¾É­P¬ü°ê°Ñ¾Ô¡H",
+                    category: "é—œéµè½‰æ©é»",
+                    question: "1917å¹´ï¼Œè‹±åœ‹æˆªç²äº†å¾·åœ‹ç™¼çµ¦å¢¨è¥¿å“¥çš„ã€Œé½Šé»˜æ›¼å¯†é›»ã€ï¼Œå…§å®¹æ…«æ¿å¢¨è¥¿å“¥åšä»€éº¼ï¼Œå¾è€Œå°è‡´ç¾åœ‹åƒæˆ°ï¼Ÿ",
                     options: [
-                        { text: "§ğÀ»¬ü°ê¨Ã¦¬´_¥¢¦a", isCorrect: true },
-                        { text: "Â_µ´»P¬ü°êªº¥Ûªo¶T©ö", isCorrect: false },
-                        { text: "·t±ş¬ü°êÁ`²Î", isCorrect: false },
-                        { text: "¥[¤J°ê»ÚÁp·ù", isCorrect: false }
+                        { text: "æ”»æ“Šç¾åœ‹ä¸¦æ”¶å¾©å¤±åœ°", isCorrect: true },
+                        { text: "æ–·çµ•èˆ‡ç¾åœ‹çš„çŸ³æ²¹è²¿æ˜“", isCorrect: false },
+                        { text: "æš—æ®ºç¾åœ‹ç¸½çµ±", isCorrect: false },
+                        { text: "åŠ å…¥åœ‹éš›è¯ç›Ÿ", isCorrect: false }
                     ],
-                    explanation: "³o¥÷±K¹qªºÃn¥ú¿E«ã¤F¬ü°ê¥Á²³¡A¦¨¬°¬ü°ê©ñ±ó©t¥ß¥D¸q°Ñ¾ÔªºÃöÁä¾É¤õ½u¡C"
+                    explanation: "é€™ä»½å¯†é›»çš„æ›å…‰æ¿€æ€’äº†ç¾åœ‹æ°‘çœ¾ï¼Œæˆç‚ºç¾åœ‹æ”¾æ£„å­¤ç«‹ä¸»ç¾©åƒæˆ°çš„é—œéµå°ç«ç·šã€‚"
                 },
                 {
                     id: 18,
                     level: 3,
-                    category: "«Ò°ê¥Ë¸Ñ",
-                    question: "¤@¾Ôµ²ªG¾É­P¤F¥|¤j«Ò°êªº¥Ë¸Ñ¡A¥]¬A¼w·N§Ó¡B¶ø¦I¡B«XÃ¹´µ¤Î¡G",
+                    category: "å¸åœ‹ç“¦è§£",
+                    question: "ä¸€æˆ°çµæœå°è‡´äº†å››å¤§å¸åœ‹çš„ç“¦è§£ï¼ŒåŒ…æ‹¬å¾·æ„å¿—ã€å¥§åŒˆã€ä¿„ç¾…æ–¯åŠï¼š",
                     options: [
-                        { text: "¤j­^«Ò°ê", isCorrect: false },
-                        { text: "¶k¹Ï°Ò«Ò°ê", isCorrect: true },
-                        { text: "ªkÄõ¦è«Ò°ê", isCorrect: false },
-                        { text: "¤é¥»«Ò°ê", isCorrect: false }
+                        { text: "å¤§è‹±å¸åœ‹", isCorrect: false },
+                        { text: "é„‚åœ–æ›¼å¸åœ‹", isCorrect: true },
+                        { text: "æ³•è˜­è¥¿å¸åœ‹", isCorrect: false },
+                        { text: "æ—¥æœ¬å¸åœ‹", isCorrect: false }
                     ],
-                    explanation: "¶k¹Ï°Ò«Ò°ê¾Ô«á¤Àµõ¡A²{¥N¤g¦Õ¨ä«Ø¥ß¡C"
+                    explanation: "é„‚åœ–æ›¼å¸åœ‹æˆ°å¾Œåˆ†è£‚ï¼Œç¾ä»£åœŸè€³å…¶å»ºç«‹ã€‚"
                 },
-                // --- Level 4: ¤Ú¾¤©M·| ---
+                // --- Level 4: å·´é»å’Œæœƒ ---
                 {
                     id: 19,
                     level: 4,
-                    category: "¤Ú¾¤©M·|",
-                    question: "1919¦~¤Ú¾¤©M·|ªº¤T¥¨ÀY¥]¬A¬ü°êÁ`²Î«Âº¸»¹¡Bªk°êÁ`²z§J¨½©s±ô¤Î­^°ê­º¬Û¡G",
+                    category: "å·´é»å’Œæœƒ",
+                    question: "1919å¹´å·´é»å’Œæœƒçš„ä¸‰å·¨é ­åŒ…æ‹¬ç¾åœ‹ç¸½çµ±å¨çˆ¾éœã€æ³•åœ‹ç¸½ç†å…‹é‡Œå­Ÿæ¢­åŠè‹±åœ‹é¦–ç›¸ï¼š",
                     options: [
-                        { text: "ªô¦Nº¸", isCorrect: false },
-                        { text: "³ÒµÜ¡D³ìªv", isCorrect: true },
-                        { text: "±i§B­Û", isCorrect: false },
-                        { text: "¦ã¼wÂ§", isCorrect: false }
+                        { text: "é‚±å‰çˆ¾", isCorrect: false },
+                        { text: "å‹èŠï¼å–¬æ²»", isCorrect: true },
+                        { text: "å¼µä¼¯å€«", isCorrect: false },
+                        { text: "è‰¾å¾·ç¦®", isCorrect: false }
                     ],
-                    explanation: "­^°ê­º¬Û³ÒµÜ¡D³ìªv¦b·|Ä³¤¤§êºt¤F½Õ¸Ñªk¬ü¥ß³õªº¨¤¦â¡C"
+                    explanation: "è‹±åœ‹é¦–ç›¸å‹èŠï¼å–¬æ²»åœ¨æœƒè­°ä¸­æ‰®æ¼”äº†èª¿è§£æ³•ç¾ç«‹å ´çš„è§’è‰²ã€‚"
                 },
                 {
                     id: 20,
                     level: 4,
-                    category: "¥Á±Ú¦Û¨M",
-                    question: "¬ü°êÁ`²Î«Âº¸»¹´£¥Xªº¡u¤Q¥|ÂI­ì«h¡v¤¤¡A­ş¤@¶µ­ì«h«P¦¨¤FªiÄõ¡B±¶§J´µ¬¥¥ï§Jµ¥·s°ê®aªº«Ø¥ß¡H",
+                    category: "æ°‘æ—è‡ªæ±º",
+                    question: "ç¾åœ‹ç¸½çµ±å¨çˆ¾éœæå‡ºçš„ã€Œåå››é»åŸå‰‡ã€ä¸­ï¼Œå“ªä¸€é …åŸå‰‡ä¿ƒæˆäº†æ³¢è˜­ã€æ·å…‹æ–¯æ´›ä¼å…‹ç­‰æ–°åœ‹å®¶çš„å»ºç«‹ï¼Ÿ",
                     options: [
-                        { text: "¥Á±Ú¦Û¨M", isCorrect: true },
-                        { text: "¦Û¥Ñ¶T©ö", isCorrect: false },
-                        { text: "¯è¦æ¦Û¥Ñ", isCorrect: false },
-                        { text: "µô´î­x³Æ", isCorrect: false }
+                        { text: "æ°‘æ—è‡ªæ±º", isCorrect: true },
+                        { text: "è‡ªç”±è²¿æ˜“", isCorrect: false },
+                        { text: "èˆªè¡Œè‡ªç”±", isCorrect: false },
+                        { text: "è£æ¸›è»å‚™", isCorrect: false }
                     ],
-                    explanation: "¥Á±Ú¦Û¨M­ì«h¥D±i¦U¥Á±Ú¦³Åv¨M©w¦Û¤vªº¬FªvÂkÄİ¡A§ïÅÜ¤F¼Ú¬wª©¹Ï¡C"
+                    explanation: "æ°‘æ—è‡ªæ±ºåŸå‰‡ä¸»å¼µå„æ°‘æ—æœ‰æ¬Šæ±ºå®šè‡ªå·±çš„æ”¿æ²»æ­¸å±¬ï¼Œæ”¹è®Šäº†æ­æ´²ç‰ˆåœ–ã€‚"
                 },
                 {
                     id: 21,
                     level: 4,
-                    category: "»â¤g³ÎÅı",
-                    question: "®Ú¾Ú¤Zº¸ÁÉ±ø¬ù¡A¼w°ê¥²¶·ÂkÁÙ­ş­Ó¦a°Ïµ¹ªk°ê¡H",
+                    category: "é ˜åœŸå‰²è®“",
+                    question: "æ ¹æ“šå‡¡çˆ¾è³½æ¢ç´„ï¼Œå¾·åœ‹å¿…é ˆæ­¸é‚„å“ªå€‹åœ°å€çµ¦æ³•åœ‹ï¼Ÿ",
                     options: [
-                        { text: "ªüº¸ÂÄ´µ-¬¥ªL", isCorrect: true },
-                        { text: "Ä¬¥x¼w°Ï", isCorrect: false },
-                        { text: "µÜ¯ôÄõ", isCorrect: false },
-                        { text: "¦è¨½¦è¨È", isCorrect: false }
+                        { text: "é˜¿çˆ¾è–©æ–¯-æ´›æ—", isCorrect: true },
+                        { text: "è˜‡å°å¾·å€", isCorrect: false },
+                        { text: "èŠèŒµè˜­", isCorrect: false },
+                        { text: "è¥¿é‡Œè¥¿äº", isCorrect: false }
                     ],
-                    explanation: "³o¸Ñ¨M¤F´¶ªk¾Ôª§¥H¨Óªºªk°ê»â¤g¶D¨D¡C"
+                    explanation: "é€™è§£æ±ºäº†æ™®æ³•æˆ°çˆ­ä»¥ä¾†çš„æ³•åœ‹é ˜åœŸè¨´æ±‚ã€‚"
                 },
                 {
                     id: 22,
                     level: 4,
-                    category: "¬Fªv­­¨î",
-                    question: "¤Zº¸ÁÉ±ø¬ù©ú¤å¸T¤î¼w°ê»P­ş­Ó¦P¤å¦PºØªº°ê®a¦X¨Ö¡]¼w¶ø¦X¨Ö¡^¡H",
+                    category: "æ”¿æ²»é™åˆ¶",
+                    question: "å‡¡çˆ¾è³½æ¢ç´„æ˜æ–‡ç¦æ­¢å¾·åœ‹èˆ‡å“ªå€‹åŒæ–‡åŒç¨®çš„åœ‹å®¶åˆä½µï¼ˆå¾·å¥§åˆä½µï¼‰ï¼Ÿ",
                     options: [
-                        { text: "¶ø¦a§Q", isCorrect: true },
-                        { text: "·ç¤h", isCorrect: false },
-                        { text: "¦I¤ú§Q", isCorrect: false },
-                        { text: "ªiÄõ", isCorrect: false }
+                        { text: "å¥§åœ°åˆ©", isCorrect: true },
+                        { text: "ç‘å£«", isCorrect: false },
+                        { text: "åŒˆç‰™åˆ©", isCorrect: false },
+                        { text: "æ³¢è˜­", isCorrect: false }
                     ],
-                    explanation: "¨ó¬ù°ê¾á¤ß¼w¶ø¦X¨Ö·|¦A¦¸³Ğ³y¤@­Ó±j¤jªº¤¤¼ÚÅQÅv¡C"
+                    explanation: "å”ç´„åœ‹æ“”å¿ƒå¾·å¥§åˆä½µæœƒå†æ¬¡å‰µé€ ä¸€å€‹å¼·å¤§çš„ä¸­æ­éœ¸æ¬Šã€‚"
                 },
                 {
                     id: 23,
                     level: 4,
-                    category: "°ê»ÚÁp·ù",
-                    question: "¬ü°êÁ`²Î«Âº¸»¹ÁöµM·¥¤O­Ò¾É¦¨¥ß°ê»ÚÁp·ù¡A¦ı¬ü°ê³Ì²×¬°¦ó¨S¦³¥[¤J¡H",
+                    category: "åœ‹éš›è¯ç›Ÿ",
+                    question: "ç¾åœ‹ç¸½çµ±å¨çˆ¾éœé›–ç„¶æ¥µåŠ›å€¡å°æˆç«‹åœ‹éš›è¯ç›Ÿï¼Œä½†ç¾åœ‹æœ€çµ‚ç‚ºä½•æ²’æœ‰åŠ å…¥ï¼Ÿ",
                     options: [
-                        { text: "°ê·|¡]°ÑÄ³°|¡^§_¨M¡A©^¦æ©t¥ß¥D¸q", isCorrect: true },
-                        { text: "³Q­^°ê©Mªk°ê±ÆÀ½", isCorrect: false },
-                        { text: "¸gÀÙ¤j¿½±øÃzµo", isCorrect: false },
-                        { text: "«Âº¸»¹Á`²Î¬ğµM¥h¥@", isCorrect: false }
+                        { text: "åœ‹æœƒï¼ˆåƒè­°é™¢ï¼‰å¦æ±ºï¼Œå¥‰è¡Œå­¤ç«‹ä¸»ç¾©", isCorrect: true },
+                        { text: "è¢«è‹±åœ‹å’Œæ³•åœ‹æ’æ“ ", isCorrect: false },
+                        { text: "ç¶“æ¿Ÿå¤§è•­æ¢çˆ†ç™¼", isCorrect: false },
+                        { text: "å¨çˆ¾éœç¸½çµ±çªç„¶å»ä¸–", isCorrect: false }
                     ],
-                    explanation: "¬ü°ê°ê·|©Úµ´§å­ã¤Zº¸ÁÉ±ø¬ù¡A¶É¦V©ó¤£¤z¯A¼Ú¬w¨Æ°Èªº©t¥ß¥D¸q¡A³o¨Ï±o°êÁp¤@¦¨¥ß´N¯Ê¥F±j¦³¤Oªº¤ä«ù¡C"
+                    explanation: "ç¾åœ‹åœ‹æœƒæ‹’çµ•æ‰¹å‡†å‡¡çˆ¾è³½æ¢ç´„ï¼Œå‚¾å‘æ–¼ä¸å¹²æ¶‰æ­æ´²äº‹å‹™çš„å­¤ç«‹ä¸»ç¾©ï¼Œé€™ä½¿å¾—åœ‹è¯ä¸€æˆç«‹å°±ç¼ºä¹å¼·æœ‰åŠ›çš„æ”¯æŒã€‚"
                 },
                 {
                     id: 24,
                     level: 4,
-                    category: "±ø¬ù¼vÅT",
-                    question: "ªk°êÁ`²z§J¨½©s±ô°í«ùÄYÃg¼w°êªº¥D­n¥Øªº¬O¡G",
+                    category: "æ¢ç´„å½±éŸ¿",
+                    question: "æ³•åœ‹ç¸½ç†å…‹é‡Œå­Ÿæ¢­å …æŒåš´æ‡²å¾·åœ‹çš„ä¸»è¦ç›®çš„æ˜¯ï¼š",
                     options: [
-                        { text: "À°§U¼w°ê­««Ø", isCorrect: false },
-                        { text: "½T«O¼w°êµLªk¦Aµo°Ê¾Ôª§", isCorrect: true },
-                        { text: "±À¼s¥Á¥D¨î«×", isCorrect: false },
-                        { text: "«Ø¥ß¼Ú¬w¦X²³°ê", isCorrect: false }
+                        { text: "å¹«åŠ©å¾·åœ‹é‡å»º", isCorrect: false },
+                        { text: "ç¢ºä¿å¾·åœ‹ç„¡æ³•å†ç™¼å‹•æˆ°çˆ­", isCorrect: true },
+                        { text: "æ¨å»£æ°‘ä¸»åˆ¶åº¦", isCorrect: false },
+                        { text: "å»ºç«‹æ­æ´²åˆçœ¾åœ‹", isCorrect: false }
                     ],
-                    explanation: "ªk°ê§Æ±æ¤@³Ò¥Ã¶h¦a®ø°£¼w°êªº¦w¥ş«Â¯Ù¡C"
+                    explanation: "æ³•åœ‹å¸Œæœ›ä¸€å‹æ°¸é€¸åœ°æ¶ˆé™¤å¾·åœ‹çš„å®‰å…¨å¨è„…ã€‚"
                 },
-                // --- Level 5: ¸gÀÙ¤j°I°h»P¤G¾Ô«e¤i ---
+                // --- Level 5: ç¶“æ¿Ÿå¤§è¡°é€€èˆ‡äºŒæˆ°å‰å¤• ---
                 {
                     id: 25,
                     level: 5,
-                    category: "¸gÀÙ¤j°I°h",
-                    question: "1929¦~10¤ë¡A­ş¤@¨Æ¥ó¼Ğ»xµÛ¸gÀÙ¤j°I°hªº¶}©l¡H",
+                    category: "ç¶“æ¿Ÿå¤§è¡°é€€",
+                    question: "1929å¹´10æœˆï¼Œå“ªä¸€äº‹ä»¶æ¨™èªŒè‘—ç¶“æ¿Ÿå¤§è¡°é€€çš„é–‹å§‹ï¼Ÿ",
                     options: [
-                        { text: "­Û´°¤j¤õ", isCorrect: false },
-                        { text: "¯Ã¬ùµØº¸µóªÑ¨a", isCorrect: true },
-                        { text: "¬fªL»È¦æ­Ë³¬", isCorrect: false },
-                        { text: "ªF¨Ê¤j¦a¾_", isCorrect: false }
+                        { text: "å€«æ•¦å¤§ç«", isCorrect: false },
+                        { text: "ç´ç´„è¯çˆ¾è¡—è‚¡ç½", isCorrect: true },
+                        { text: "æŸæ—éŠ€è¡Œå€’é–‰", isCorrect: false },
+                        { text: "æ±äº¬å¤§åœ°éœ‡", isCorrect: false }
                     ],
-                    explanation: "µØº¸µóªÑ¨a¤Şµo¤F¥ş²y©Êªº¸gÀÙ¦M¾÷¡C"
+                    explanation: "è¯çˆ¾è¡—è‚¡ç½å¼•ç™¼äº†å…¨çƒæ€§çš„ç¶“æ¿Ÿå±æ©Ÿã€‚"
                 },
                 {
                     id: 26,
                     level: 5,
-                    category: "¸gÀÙ±Y¼ì",
-                    question: "¤j¿½±ø¾É­P¬ü°ê°±¤î¤F¹ï¼w°êªº¶U´Ú´©§U¡]¹D«Â´µ­p¹º¡^¡Aª½±µ¾É­P¼w°ê¡G",
+                    category: "ç¶“æ¿Ÿå´©æ½°",
+                    question: "å¤§è•­æ¢å°è‡´ç¾åœ‹åœæ­¢äº†å°å¾·åœ‹çš„è²¸æ¬¾æ´åŠ©ï¼ˆé“å¨æ–¯è¨ˆåŠƒï¼‰ï¼Œç›´æ¥å°è‡´å¾·åœ‹ï¼š",
                     options: [
-                        { text: "¸gÀÙ±Y¼ì¡A¥¢·~²vöt¤É", isCorrect: true },
-                        { text: "¹A·~¤jÂ×¦¬", isCorrect: false },
-                        { text: "¬ì§Ş¬ğ­¸²r¶i", isCorrect: false },
-                        { text: "©M¥­¥D¸q²±¦æ", isCorrect: false }
+                        { text: "ç¶“æ¿Ÿå´©æ½°ï¼Œå¤±æ¥­ç‡é£†å‡", isCorrect: true },
+                        { text: "è¾²æ¥­å¤§è±æ”¶", isCorrect: false },
+                        { text: "ç§‘æŠ€çªé£›çŒ›é€²", isCorrect: false },
+                        { text: "å’Œå¹³ä¸»ç¾©ç››è¡Œ", isCorrect: false }
                     ],
-                    explanation: "¼w°ê¸gÀÙ°ª«×¨Ì¿à¬ü°ê¶U´Ú¨Ó¤ä¥I½ß´Ú¡A¸êª÷ÃìÂ_µõ¾É­PªÀ·|°ÊÀú¡A¦³§Q¯Çºé´xÅv¡C"
+                    explanation: "å¾·åœ‹ç¶“æ¿Ÿé«˜åº¦ä¾è³´ç¾åœ‹è²¸æ¬¾ä¾†æ”¯ä»˜è³ æ¬¾ï¼Œè³‡é‡‘éˆæ–·è£‚å°è‡´ç¤¾æœƒå‹•ç›ªï¼Œæœ‰åˆ©ç´ç²¹æŒæ¬Šã€‚"
                 },
                 {
                     id: 27,
                     level: 5,
-                    category: "¬Fªv·¥ºİ¤Æ",
-                    question: "¸gÀÙ¤j°I°h¦p¦ó§Uªø¤F¯ÇºéÄÒ¦b¼w°êªº¿³°_¡H",
+                    category: "æ”¿æ²»æ¥µç«¯åŒ–",
+                    question: "ç¶“æ¿Ÿå¤§è¡°é€€å¦‚ä½•åŠ©é•·äº†ç´ç²¹é»¨åœ¨å¾·åœ‹çš„èˆˆèµ·ï¼Ÿ",
                     options: [
-                        { text: "¤H¥Á¥Í¬¡´I¨¬¡A¤ä«ù¬F©²", isCorrect: false },
-                        { text: "¥¢·~»P³h§x¨Ï¤H¥Á´÷±æ±j¤H¬Fªv", isCorrect: true },
-                        { text: "¬ü°ê´£¨Ñ¤F¤j¶q´©§U", isCorrect: false },
-                        { text: "¼w°ê¸gÀÙ¥¼¨ü¼vÅT", isCorrect: false }
+                        { text: "äººæ°‘ç”Ÿæ´»å¯Œè¶³ï¼Œæ”¯æŒæ”¿åºœ", isCorrect: false },
+                        { text: "å¤±æ¥­èˆ‡è²§å›°ä½¿äººæ°‘æ¸´æœ›å¼·äººæ”¿æ²»", isCorrect: true },
+                        { text: "ç¾åœ‹æä¾›äº†å¤§é‡æ´åŠ©", isCorrect: false },
+                        { text: "å¾·åœ‹ç¶“æ¿Ÿæœªå—å½±éŸ¿", isCorrect: false }
                     ],
-                    explanation: "§Æ¯S°Ç©Ó¿Õ¸Ñ¨M¥¢·~°İÃD¨Ã¼¹·´¤Zº¸ÁÉ±ø¬ù¡AÄ¹±o¤Fµ´±æ¥Á²³ªº¤ä«ù¡C"
+                    explanation: "å¸Œç‰¹å‹’æ‰¿è«¾è§£æ±ºå¤±æ¥­å•é¡Œä¸¦æ’•æ¯€å‡¡çˆ¾è³½æ¢ç´„ï¼Œè´å¾—äº†çµ•æœ›æ°‘çœ¾çš„æ”¯æŒã€‚"
                 },
                 {
                     id: 28,
                     level: 5,
-                    category: "¼w°ê¬F§½",
-                    question: "²Ä¤@¦¸¥@¬É¤j¾Ô«á¡A¼w°ê¦¨¥ß¤F²Ä¤@­Ó¥Á¥D¬FÅé¡A¦ı¦]µL¤O¸Ñ¨M¸gÀÙ»P¬Fªv¦M¾÷¦Ó³Ì²×±Y¼ì¡A³o­Ó¬FÅéºÙ¬°¡G",
+                    category: "å¾·åœ‹æ”¿å±€",
+                    question: "ç¬¬ä¸€æ¬¡ä¸–ç•Œå¤§æˆ°å¾Œï¼Œå¾·åœ‹æˆç«‹äº†ç¬¬ä¸€å€‹æ°‘ä¸»æ”¿é«”ï¼Œä½†å› ç„¡åŠ›è§£æ±ºç¶“æ¿Ÿèˆ‡æ”¿æ²»å±æ©Ÿè€Œæœ€çµ‚å´©æ½°ï¼Œé€™å€‹æ”¿é«”ç¨±ç‚ºï¼š",
                     options: [
-                        { text: "«Âº¿¦@©M (Weimar Republic)", isCorrect: true },
-                        { text: "²Ä¤T«Ò°ê", isCorrect: false },
-                        { text: "¼w·N§Ó¨¹Áp", isCorrect: false },
-                        { text: "´¶¾|¤h¤ı°ê", isCorrect: false }
+                        { text: "å¨ç‘ªå…±å’Œ (Weimar Republic)", isCorrect: true },
+                        { text: "ç¬¬ä¸‰å¸åœ‹", isCorrect: false },
+                        { text: "å¾·æ„å¿—é‚¦è¯", isCorrect: false },
+                        { text: "æ™®é­¯å£«ç‹åœ‹", isCorrect: false }
                     ],
-                    explanation: "«Âº¿¦@©MÁöµM¦³¥Á¥D¾Ëªk¡A¦ı¤@ª½­I­tµÛ¤Zº¸ÁÉ±ø¬ùªº³±¼v¡A³Ì²×³Q¯Çºé¨ú¥N¡C"
+                    explanation: "å¨ç‘ªå…±å’Œé›–ç„¶æœ‰æ°‘ä¸»æ†²æ³•ï¼Œä½†ä¸€ç›´èƒŒè² è‘—å‡¡çˆ¾è³½æ¢ç´„çš„é™°å½±ï¼Œæœ€çµ‚è¢«ç´ç²¹å–ä»£ã€‚"
                 },
                 {
                     id: 29,
                     level: 5,
-                    category: "¥~¥æ¬Fµ¦",
-                    question: "­±¹ï¼w·N¤éªº«I²¤ÂX±i¡]¦p§]¨Ö¶ø¦a§Q¡B±¶§J¡^¡A­^ªkµ¥°êªì´Á±Ä¨ú¤F¬Æ»ò¥~¥æ¬Fµ¦¡A¸Õ¹Ï³z¹LÅı¨B¨Ó´«¨ú©M¥­¡H",
+                    category: "å¤–äº¤æ”¿ç­–",
+                    question: "é¢å°å¾·æ„æ—¥çš„ä¾µç•¥æ“´å¼µï¼ˆå¦‚åä½µå¥§åœ°åˆ©ã€æ·å…‹ï¼‰ï¼Œè‹±æ³•ç­‰åœ‹åˆæœŸæ¡å–äº†ç”šéº¼å¤–äº¤æ”¿ç­–ï¼Œè©¦åœ–é€éè®“æ­¥ä¾†æ›å–å’Œå¹³ï¼Ÿ",
                     options: [
-                        { text: "¸k¹t¬Fµ¦ (Appeasement)", isCorrect: true },
-                        { text: "³ò°ô¬Fµ¦", isCorrect: false },
-                        { text: "ÅK¦å¬Fµ¦", isCorrect: false },
-                        { text: "°¨·²º¸­p¹º", isCorrect: false }
+                        { text: "ç¶é–æ”¿ç­– (Appeasement)", isCorrect: true },
+                        { text: "åœå µæ”¿ç­–", isCorrect: false },
+                        { text: "éµè¡€æ”¿ç­–", isCorrect: false },
+                        { text: "é¦¬æ­‡çˆ¾è¨ˆåŠƒ", isCorrect: false }
                     ],
-                    explanation: "¸k¹t¬Fµ¦¤£¶È¨S¯àªı¤î¾Ôª§¡A¤Ï¦Ó§Uªø¤F¶b¤ß°êªº«I²¤³¥¤ß¡C"
+                    explanation: "ç¶é–æ”¿ç­–ä¸åƒ…æ²’èƒ½é˜»æ­¢æˆ°çˆ­ï¼Œåè€ŒåŠ©é•·äº†è»¸å¿ƒåœ‹çš„ä¾µç•¥é‡å¿ƒã€‚"
                 },
                 {
                     id: 30,
                     level: 5,
-                    category: "¨«¦V¤G¾Ô",
-                    question: "¤Zº¸ÁÉ±ø¬ùªº«è«ë¥[¤W¸gÀÙ¤j°I°hªº¥´À»¡A³Ì²×¾É­P¤F­şºØ¬Fªv«ä¼é¦b¼w·N¤é¥ÆÀİ¡H",
+                    category: "èµ°å‘äºŒæˆ°",
+                    question: "å‡¡çˆ¾è³½æ¢ç´„çš„æ€¨æ¨åŠ ä¸Šç¶“æ¿Ÿå¤§è¡°é€€çš„æ‰“æ“Šï¼Œæœ€çµ‚å°è‡´äº†å“ªç¨®æ”¿æ²»æ€æ½®åœ¨å¾·æ„æ—¥æ°¾æ¿«ï¼Ÿ",
                     options: [
-                        { text: "¦Û¥Ñ¥Á¥D¥D¸q", isCorrect: false },
-                        { text: "·¥Åv¥D¸q", isCorrect: true },
-                        { text: "µL¬F©²¥D¸q", isCorrect: false },
-                        { text: "©M¥­¥D¸q", isCorrect: false }
+                        { text: "è‡ªç”±æ°‘ä¸»ä¸»ç¾©", isCorrect: false },
+                        { text: "æ¥µæ¬Šä¸»ç¾©", isCorrect: true },
+                        { text: "ç„¡æ”¿åºœä¸»ç¾©", isCorrect: false },
+                        { text: "å’Œå¹³ä¸»ç¾©", isCorrect: false }
       ],
-      explanation: "¼w·N¤é¤T°ê³Ì²×µ²¦¨¶b¤ß°ê¡Aµo°Ê¤G¾Ô¡C"
+      explanation: "å¾·æ„æ—¥ä¸‰åœ‹æœ€çµ‚çµæˆè»¸å¿ƒåœ‹ï¼Œç™¼å‹•äºŒæˆ°ã€‚"
                 }
             ];
 
             // --- Handlers ---
             const handleStartGame = () => {
                 if (!playerName.trim()) {
-                    alert("½Ğ¿é¤J¦W¦r¥H°Ñ¥[±Æ¦W");
+                    alert("è«‹è¼¸å…¥åå­—ä»¥åƒåŠ æ’å");
                     return;
                 }
                 playSynthSound('click');
@@ -837,11 +833,11 @@
 
             const getLevelInfo = (lvl) => {
                 switch(lvl) {
-                    case 1: return { title: "²Ä¤@³¹¡G¤õÃÄ±í³QÂI¿U", icon: <Flame size={64} className="text-orange-500 animate-pulse"/>, color: "text-orange-500", desc: "¼Ú¬w¦C±jªº¥Ù¬Ş¤@Ä²§Yµo" };
-                    case 2: return { title: "²Ä¤G³¹¡G¦M¾÷¥|¥ñ", icon: <AlertCircle size={64} className="text-red-500 animate-pulse"/>, color: "text-red-500", desc: "±q¥_«D¨ì¤Úº¸·F¡A¥~¥æ½Ä¬ğ¤£Â_¤É¯Å" };
-                    case 3: return { title: "²Ä¤T³¹¡G«Ò°êªº±Y¼ì", icon: <Crown size={64} className="text-purple-500 animate-pulse"/>, color: "text-purple-500", desc: "¬Ó«a¸¨¦a¡Aª©¹Ï­«¹º" };
-                    case 4: return { title: "²Ä¥|³¹¡G¤Zº¸ÁÉªº¼f§P", icon: <BookOpen size={64} className="text-blue-500"/>, color: "text-blue-500", desc: "©M¥­±ø¬ùÁÙ¬O¥ğ¾Ô¨ó©w¡H" };
-                    case 5: return { title: "²Ä¤­³¹¡G¶Â·tªº¤j¿½±ø", icon: <Volume2 size={64} className="text-stone-500 animate-bounce"/>, color: "text-stone-500", desc: "¸gÀÙ±Y¼ì»P¿WµôªÌ±U°_" };
+                    case 1: return { title: "ç¬¬ä¸€ç« ï¼šç«è—¥æ¡¶è¢«é»ç‡ƒ", icon: <Flame size={64} className="text-orange-500 animate-pulse"/>, color: "text-orange-500", desc: "æ­æ´²åˆ—å¼·çš„çŸ›ç›¾ä¸€è§¸å³ç™¼" };
+                    case 2: return { title: "ç¬¬äºŒç« ï¼šå±æ©Ÿå››ä¼", icon: <AlertCircle size={64} className="text-red-500 animate-pulse"/>, color: "text-red-500", desc: "å¾åŒ—éåˆ°å·´çˆ¾å¹¹ï¼Œå¤–äº¤è¡çªä¸æ–·å‡ç´š" };
+                    case 3: return { title: "ç¬¬ä¸‰ç« ï¼šå¸åœ‹çš„å´©æ½°", icon: <Crown size={64} className="text-purple-500 animate-pulse"/>, color: "text-purple-500", desc: "çš‡å† è½åœ°ï¼Œç‰ˆåœ–é‡åŠƒ" };
+                    case 4: return { title: "ç¬¬å››ç« ï¼šå‡¡çˆ¾è³½çš„å¯©åˆ¤", icon: <BookOpen size={64} className="text-blue-500"/>, color: "text-blue-500", desc: "å’Œå¹³æ¢ç´„é‚„æ˜¯ä¼‘æˆ°å”å®šï¼Ÿ" };
+                    case 5: return { title: "ç¬¬äº”ç« ï¼šé»‘æš—çš„å¤§è•­æ¢", icon: <Volume2 size={64} className="text-stone-500 animate-bounce"/>, color: "text-stone-500", desc: "ç¶“æ¿Ÿå´©æ½°èˆ‡ç¨è£è€…å´›èµ·" };
                     default: return { title: "", icon: null };
                 }
             };
@@ -851,9 +847,9 @@
                return (
                   <div className="min-h-screen flex items-center justify-center p-4">
                      <div className="bg-stone-800 p-8 rounded-lg border-2 border-red-500 text-center">
-                        <h2 className="text-2xl font-bold mb-4 text-red-500">³]©w¿ù»~</h2>
-                        <p>µLªk³s½u¨ì¸ê®Æ®w¡C</p>
-                        <p className="text-sm mt-2 text-stone-400">½Ğ½T»{±z¤w¦bµ{¦¡½X¤¤¶ñ¤J Firebase Config¡C</p>
+                        <h2 className="text-2xl font-bold mb-4 text-red-500">è¨­å®šéŒ¯èª¤</h2>
+                        <p>ç„¡æ³•é€£ç·šåˆ°è³‡æ–™åº«ã€‚</p>
+                        <p className="text-sm mt-2 text-stone-400">è«‹ç¢ºèªæ‚¨å·²åœ¨ç¨‹å¼ç¢¼ä¸­å¡«å…¥ Firebase Configã€‚</p>
                      </div>
                   </div>
                );
@@ -870,18 +866,18 @@
                         <div className="inline-block bg-amber-600 p-4 rounded-full mb-4 shadow-[0_0_20px_rgba(217,119,6,0.6)] animate-pulse">
                             <Swords size={48} className="text-white" />
                         </div>
-                        <h1 className="text-4xl font-black text-amber-500 tracking-wider mb-2">¾ú¥v¾Ô§Ğ</h1>
-                        <p className="text-stone-400">¦h¤H³s½u¬D¾Ô (40¤H+)</p>
+                        <h1 className="text-4xl font-black text-amber-500 tracking-wider mb-2">æ­·å²æˆ°å½¹</h1>
+                        <p className="text-stone-400">å¤šäººé€£ç·šæŒ‘æˆ° (40äºº+)</p>
                         </div>
 
                         <div className="space-y-4 relative z-10">
                         <div>
-                            <label className="block text-stone-400 text-sm font-bold mb-2">§Aªº¦W¦r / ¥N¸¹</label>
+                            <label className="block text-stone-400 text-sm font-bold mb-2">ä½ çš„åå­— / ä»£è™Ÿ</label>
                             <input 
                             type="text" 
                             value={playerName}
                             onChange={(e) => setPlayerName(e.target.value)}
-                            placeholder="¿é¤J¦W¦r¥H¶}©l..."
+                            placeholder="è¼¸å…¥åå­—ä»¥é–‹å§‹..."
                             className="w-full bg-stone-900 border-2 border-stone-700 rounded-lg p-3 text-white focus:border-amber-500 outline-none transition-colors"
                             maxLength={12}
                             />
@@ -891,7 +887,7 @@
                             disabled={!playerName.trim()}
                             className="w-full bg-amber-600 hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-lg transition-all transform hover:scale-105 active:scale-95 shadow-lg border-b-4 border-amber-800 flex items-center justify-center gap-2 group"
                         >
-                            <Swords size={20} className="group-hover:rotate-12 transition-transform"/> ¥[¤J¾Ô³õ
+                            <Swords size={20} className="group-hover:rotate-12 transition-transform"/> åŠ å…¥æˆ°å ´
                         </button>
                         </div>
                     </div>
@@ -899,7 +895,7 @@
                     <div className="bg-stone-800/80 rounded-xl shadow-xl p-6 border border-stone-700 backdrop-blur-sm overflow-hidden flex flex-col h-[500px]">
                         <div className="flex items-center gap-2 mb-4 pb-4 border-b border-stone-700">
                             <Trophy className="text-yellow-500" />
-                            <h3 className="text-xl font-bold text-white">§Y®É±Æ¦æº]</h3>
+                            <h3 className="text-xl font-bold text-white">å³æ™‚æ’è¡Œæ¦œ</h3>
                             <span className="bg-green-600 text-xs px-2 py-0.5 rounded ml-auto flex items-center gap-1 shadow-[0_0_10px_rgba(22,163,74,0.5)]">
                             <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span> LIVE
                             </span>
@@ -907,7 +903,7 @@
                         
                         <div className="overflow-y-auto pr-2 space-y-2 flex-grow custom-scrollbar">
                             {leaderboard.length === 0 ? (
-                            <div className="text-center text-stone-500 py-10">¼ÈµL°O¿ı¡A¦¨¬°²Ä¤@­Ó¶Ç©_§a¡I</div>
+                            <div className="text-center text-stone-500 py-10">æš«ç„¡è¨˜éŒ„ï¼Œæˆç‚ºç¬¬ä¸€å€‹å‚³å¥‡å§ï¼</div>
                             ) : (
                             leaderboard.map((entry, idx) => (
                                 <div key={idx} className={`flex items-center justify-between p-3 rounded bg-stone-700/50 border border-stone-700 transition-all hover:bg-stone-700 ${idx < 3 ? 'border-amber-500/30 bg-amber-900/10' : ''}`}>
@@ -949,10 +945,10 @@
                         </div>
                     </div>
                     <h2 className={`text-6xl font-black mb-4 ${info.color} drop-shadow-[0_0_25px_rgba(0,0,0,1)] tracking-tight`}>
-                        {info.title.split("¡G")[0]}
+                        {info.title.split("ï¼š")[0]}
                     </h2>
                     <h3 className="text-3xl text-white font-bold mb-8 border-t-2 border-b-2 border-stone-700 py-4 inline-block tracking-widest bg-stone-900/50 px-8 backdrop-blur-sm">
-                        {info.title.split("¡G")[1]}
+                        {info.title.split("ï¼š")[1]}
                     </h3>
                     <p className="text-xl text-stone-300 italic max-w-lg mx-auto leading-relaxed drop-shadow-md">
                         "{info.desc}"
@@ -982,20 +978,20 @@
                     )}
                     
                     <h2 className={`text-4xl font-bold mb-2 ${isVictory ? 'text-white' : 'text-red-500'}`}>
-                        {isVictory ? '¥úºa³Ó§Q¡I' : '¥ô°È¥¢±Ñ'}
+                        {isVictory ? 'å…‰æ¦®å‹åˆ©ï¼' : 'ä»»å‹™å¤±æ•—'}
                     </h2>
                     <p className="text-stone-400 mb-8">
-                        {isVictory ? '§A¨£ÃÒ¤F¾ú¥vªº¿³°I¡C' : '¾ú¥vªº¬x¬y¬OµL±¡ªº...'}
+                        {isVictory ? 'ä½ è¦‹è­‰äº†æ­·å²çš„èˆˆè¡°ã€‚' : 'æ­·å²çš„æ´ªæµæ˜¯ç„¡æƒ…çš„...'}
                     </p>
 
                     <div className="bg-stone-900/80 p-6 rounded-lg mb-8 border border-stone-700 relative z-10">
-                        <div className="text-sm text-stone-500 mb-2 uppercase tracking-widest">³Ì²×±o¤À</div>
+                        <div className="text-sm text-stone-500 mb-2 uppercase tracking-widest">æœ€çµ‚å¾—åˆ†</div>
                         <div className={`text-6xl font-black ${isVictory ? 'text-amber-400' : 'text-stone-300'}`}>
                         {score}
                         </div>
                         <div className="text-stone-500 text-sm mt-2 flex items-center justify-center gap-1">
                         <Zap size={14} className={isVictory ? "text-amber-400" : "text-stone-600"}/> 
-                        ¤w¤W¶Ç¦Ü±Æ¦æº]
+                        å·²ä¸Šå‚³è‡³æ’è¡Œæ¦œ
                         </div>
                     </div>
 
@@ -1008,16 +1004,16 @@
                             className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors border border-indigo-400/50 shadow-lg shadow-indigo-900/50"
                         >
                             {isAiLoading ? (
-                            <><span className="animate-spin">?</span> ¤ÀªR¾Ôªp¤¤...</>
+                            <><span className="animate-spin">?</span> åˆ†ææˆ°æ³ä¸­...</>
                             ) : (
-                            <><ScrollText size={18} /> ¥Í¦¨ AI ¾Ô§Ğµû¦ô³ø§i</>
+                            <><ScrollText size={18} /> ç”Ÿæˆ AI æˆ°å½¹è©•ä¼°å ±å‘Š</>
                             )}
                         </button>
                         ) : (
                         <div className="bg-stone-900/90 border border-indigo-500/50 rounded-lg p-4 text-left animate-fade-in">
                             <div className="flex items-center gap-2 mb-2 text-indigo-400 border-b border-indigo-500/30 pb-2">
                                 <Sparkles size={16} />
-                                <span className="font-bold text-sm">«ü´§©xµû»y</span>
+                                <span className="font-bold text-sm">æŒ‡æ®å®˜è©•èª</span>
                             </div>
                             <p className="text-stone-300 text-sm leading-relaxed whitespace-pre-wrap">{aiContent}</p>
                         </div>
@@ -1033,7 +1029,7 @@
                         }}
                         className="w-full bg-stone-700 hover:bg-stone-600 text-white font-bold py-3 px-6 rounded-lg transition-colors border-b-4 border-stone-900 active:border-b-0 active:translate-y-1"
                         >
-                        ªğ¦^¤jÆU (¬d¬İ±Æ¦W)
+                        è¿”å›å¤§å»³ (æŸ¥çœ‹æ’å)
                         </button>
                     </div>
                     </div>
@@ -1079,7 +1075,7 @@
                         ))}
                         </div>
                         <div className="text-xs text-stone-500 font-mono">
-                        ¶i«×: {currentQuestionIndex + 1} / {questions.length}
+                        é€²åº¦: {currentQuestionIndex + 1} / {questions.length}
                         </div>
                     </div>
                     
@@ -1150,7 +1146,7 @@
                             }
                             <div>
                             <p className={`font-black text-xl mb-1 ${questions[currentQuestionIndex].options[selectedOption].isCorrect ? 'text-emerald-500' : 'text-red-500'}`}>
-                                {questions[currentQuestionIndex].options[selectedOption].isCorrect ? '¾Ô³N¦¨¥\¡I' : '¾Ô½u±Y¼ì¡I'}
+                                {questions[currentQuestionIndex].options[selectedOption].isCorrect ? 'æˆ°è¡“æˆåŠŸï¼' : 'æˆ°ç·šå´©æ½°ï¼'}
                             </p>
                             <p className="text-stone-300 text-sm leading-relaxed">
                                 {currentQ.explanation}
@@ -1162,7 +1158,7 @@
                             onClick={handleNextQuestion}
                             className="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-4 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 border-b-4 border-amber-800 active:border-b-0 active:translate-y-1 shadow-lg group"
                         >
-                            {lives <= 0 ? 'ºM°h (µ²§ô)' : (currentQuestionIndex + 1 === questions.length ? '»â¨ú¾±³¹ (§¹¦¨)' : '¤U¤@Ãö¥d')} 
+                            {lives <= 0 ? 'æ’¤é€€ (çµæŸ)' : (currentQuestionIndex + 1 === questions.length ? 'é ˜å–å‹³ç«  (å®Œæˆ)' : 'ä¸‹ä¸€é—œå¡')} 
                             <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform"/>
                         </button>
                         </div>
